@@ -14,7 +14,7 @@ builder.Services.AddTransient<MiniShopServices>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<Minishop2023Context>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddCors(options =>
 {
@@ -30,6 +30,12 @@ if (connectionString != null)
     healthChecks.AddSqlServer(connectionString);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<Minishop2023Context>();
+    db.Database.Migrate();
+}
 
 if (app.Environment.IsDevelopment())
 {
