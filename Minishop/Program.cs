@@ -1,5 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Minishop.DAL;
+using Minishop.DAL.Repositories;
 using Minishop.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,17 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddTransient<MiniShopServices>();
+// Injetando reposit�rios: AddScoped - Uma nova inst�ncia por request
+builder.Services.AddScoped<CustomersRepository>();
+builder.Services.AddScoped<OrdersRepository>();
+builder.Services.AddScoped<SuppliersRepository>();
+builder.Services.AddScoped<ProductsRepository>();
+
+// Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio
+builder.Services.AddTransient<CustomersService>();
+builder.Services.AddTransient<OrdersService>();
+builder.Services.AddTransient<ProductsService>();
+builder.Services.AddTransient<SuppliersService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -30,6 +41,12 @@ if (connectionString != null)
     healthChecks.AddSqlServer(connectionString);
 
 var app = builder.Build();
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<Minishop2023Context>();
+//    db.Database.Migrate();
+//}
 
 if (app.Environment.IsDevelopment())
 {
