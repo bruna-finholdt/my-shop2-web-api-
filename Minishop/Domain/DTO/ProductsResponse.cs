@@ -15,9 +15,9 @@ namespace Minishop.Domain.DTO
         }
         public int Id { get; private set; }
         public string ProductName { get; private set; }
-        public int SupplierId { get; set; }
+        public int SupplierId { get; private set; }
         public decimal? UnitPrice { get; private set; }
         public bool IsDiscontinued { get; private set; }
-        public string? PackageName { get; set; }
+        public string? PackageName { get; private set; }
     }
 }
