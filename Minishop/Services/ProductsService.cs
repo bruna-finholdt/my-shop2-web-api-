@@ -1,5 +1,7 @@
 ﻿using Minishop.DAL.Repositories;
 using Minishop.Domain.DTO;
+using Minishop.Services;
+using Minishop.Services.Base;
 
 namespace Minishop.Services
 {
@@ -29,29 +31,32 @@ namespace Minishop.Services
             return response;
         }
 
-        //public async Task<ServicePagedResponse<ProductsResponse>> Pesquisar(PageQueryRequest queryResquest)
-        ////Lista Customers com paginação
-        //{
-        //    // Consulta itens no banco
-        //    var listaPesquisa = await _productsRepository.Pesquisar(
-        //        queryResquest.PaginaAtual,
-        //        queryResquest.Quantidade
-        //    );
-        //    // Conta itens do banco
-        //    var contagem = await _productsRepository.Contagem();
-        //    // Transforma Customer em CustomerResponse
-        //    var listaConvertida = listaPesquisa
-        //        .Select(customer => new CustomerResponse(customer));
+        public async Task<ServicePagedResponse<ProductsResponse>> Pesquisar(PageQueryRequest queryResquest)
+        {
+            //Lista Customers com paginação
+            {
+                // Consulta itens no banco
+                var listaPesquisa = await _productsRepository.Pesquisar(
+                    queryResquest.PaginaAtual,
+                    queryResquest.Quantidade
+                );
+                // Conta itens do banco
+                var contagem = await _productsRepository.Contagem();
+                // Transforma Product em ProductResponse
+                var listaConvertida = listaPesquisa
+                    .Select(product => new ProductsResponse(product));
 
-        //    // Cria resultado com paginação
-        //    return new ServicePagedResponse<CustomerResponse>(
-        //        listaConvertida,
-        //        contagem,
-        //        queryResquest.PaginaAtual,
-        //        queryResquest.Quantidade
-        //    );
-        //}
-        ////No método de listagem de todos os customers, os usos do método Select da biblioteca Linq
-        ////funcionam como um transformador para cada objeto da lista;
+                // Cria resultado com paginação
+                return new ServicePagedResponse<ProductsResponse>(
+                    listaConvertida,
+                    contagem,
+                    queryResquest.PaginaAtual,
+                    queryResquest.Quantidade
+                );
+            }
+            //No método de listagem de todos os products, os usos do método Select da biblioteca Linq
+            //funcionam como um transformador para cada objeto da lista;
+
+        }
     }
 }
