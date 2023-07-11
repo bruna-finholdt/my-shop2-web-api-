@@ -25,7 +25,7 @@ builder.Services.AddTransient<SuppliersService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<Minishop2023Context>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddCors(options =>
 {
