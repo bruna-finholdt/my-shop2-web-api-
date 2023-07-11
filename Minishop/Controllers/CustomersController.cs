@@ -29,5 +29,16 @@ namespace Minishop.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Get([FromQuery] PageQueryRequest queryResquest)
+        {
+            //Validação modelo de entrada
+            var retorno = await _service.Pesquisar(queryResquest);
+            if (retorno.Sucesso)
+                return Ok(retorno);
+            else
+                return BadRequest(retorno);
+        }
     }
 }

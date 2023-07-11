@@ -20,7 +20,7 @@ namespace Minishop.DAL.Repositories
             return await _minishop2023Context.Products.CountAsync(x => x.IsDiscontinued);
         }
 
-        public async Task<List<Product>> Pesquisar(int paginaAtual, int qtdPagina) 
+        public async Task<List<Product>> Pesquisar(int paginaAtual, int qtdPagina)
         {
             int qtaPaginasAnteriores = paginaAtual * qtdPagina - qtdPagina;
 
@@ -31,7 +31,6 @@ namespace Minishop.DAL.Repositories
                 .Take(qtdPagina)
                 .ToListAsync();
         }
-
 
     }
 }
