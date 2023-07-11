@@ -23,7 +23,7 @@ public partial class Product
     /// <summary>
     /// Preço unitário do produto
     /// </summary>
-    public decimal UnitPrice { get; set; }
+    public decimal? UnitPrice { get; set; }
 
     /// <summary>
     /// O produto está descontinuado

@@ -4,11 +4,11 @@ namespace MinishopTestes.Services
 {
     public class MiniShopServiceTeste
     {
-        private readonly MiniShopServices _services;
+        private readonly CustomersService _services;
 
         public MiniShopServiceTeste()
         {
-            _services = new MiniShopServices();
+            _services = new CustomersService();
         }
 
         [Fact]
