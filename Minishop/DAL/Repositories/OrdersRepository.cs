@@ -16,5 +16,18 @@ namespace Minishop.DAL.Repositories
         {
             return await _minishop2023Context.OrderItems.Select(x => x.OrderId).Distinct().CountAsync();
         }
+
+        public async Task<List<CustomerOrder>> Pesquisar(int paginaAtual, int qtdPagina)
+        {
+            int qtaPaginasAnteriores = paginaAtual * qtdPagina - qtdPagina;
+
+            return await _minishop2023Context
+                .Set<CustomerOrder>()
+                .Include(x => x.Customer)
+                .Include(x => x.OrderItems)
+                .Skip(qtaPaginasAnteriores)
+                .Take(qtdPagina)
+                .ToListAsync();
+        }
     }
 }

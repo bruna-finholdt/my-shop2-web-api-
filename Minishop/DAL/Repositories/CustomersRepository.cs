@@ -16,7 +16,6 @@ namespace Minishop.DAL.Repositories
 
             return await _minishop2023Context
                 .Set<Customer>()
-                .OrderBy(customer => customer.FirstName)
                 .Skip(qtaPaginasAnteriores)
                 .Take(qtdPagina)
                 .ToListAsync();
