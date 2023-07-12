@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Minishop.DAL.Base;
+using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
 
 namespace Minishop.DAL.Repositories
 {
-    public class SuppliersRepository : BaseRepository<Customer>
+    public class SuppliersRepository : BaseRepository<Supplier>
     {
         public SuppliersRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
         {

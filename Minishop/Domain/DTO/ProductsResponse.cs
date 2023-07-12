@@ -1,4 +1,5 @@
 ﻿using Minishop.Domain.Entity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Minishop.Domain.DTO
 {
@@ -13,6 +14,7 @@ namespace Minishop.Domain.DTO
             IsDiscontinued = product.IsDiscontinued;
             PackageName = product.PackageName;
         }
+
         public int Id { get; private set; }
         public string ProductName { get; private set; }
         public int SupplierId { get; private set; }
