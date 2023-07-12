@@ -35,5 +35,17 @@ namespace Minishop.Controllers
             else
                 return BadRequest(retorno);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            //Validação modelo de entrada
+            var retorno = await _service.PesquisaPorId(id);
+
+            if (retorno.Sucesso)
+                return Ok(retorno.Conteudo);
+            else
+                return NotFound(retorno);
+        }
     }
 }
