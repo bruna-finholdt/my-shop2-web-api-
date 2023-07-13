@@ -48,15 +48,24 @@ namespace Minishop.Controllers
                 return NotFound(retorno);
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> Get()
-        //{
-        //    //Validação modelo de entrada
-        //    var retorno = await _service.Pesquisar();
-        //    if (retorno.Sucesso)
-        //        return Ok(retorno);
-        //    else
-        //        return BadRequest(retorno);
-        //}
+        [HttpPost]
+        // FromBody para indicar de o corpo da requisição deve ser mapeado para o modelo
+        public async Task<IActionResult> Post([FromBody] ProductCreateRequest postModel)
+        {
+            //Validação modelo de entrada
+            if (ModelState.IsValid)
+            {
+                var retorno = await _service.Cadastrar(postModel);
+                if (!retorno.Sucesso)
+                    return BadRequest(retorno);
+                else
+                    return Ok(retorno.Conteudo);
+            }
+            else
+                return BadRequest(ModelState);
+        }
+
+
+
     }
 }

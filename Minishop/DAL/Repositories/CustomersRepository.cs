@@ -20,5 +20,16 @@ namespace Minishop.DAL.Repositories
                 .Take(qtdPagina)
                 .ToListAsync();
         }
+
+        public override async Task<Customer> PesquisaPorId(int id)
+        {
+            // select top 1 * from T where id = :id
+            return await _minishop2023Context
+                .Customers
+                .Include(x => x.CustomerOrders)
+                    .ThenInclude(x => x.OrderItems)
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+        }
     }
 }

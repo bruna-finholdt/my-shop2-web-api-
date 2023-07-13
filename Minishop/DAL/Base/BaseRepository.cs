@@ -58,6 +58,7 @@ namespace Minishop.DAL.Base
             return novo;
         }
 
+
         ///// <summary>
         ///// Cadastra entidades enviadas
         ///// </summary>
