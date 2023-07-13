@@ -5,12 +5,12 @@ namespace Minishop.Domain.DTO
 {
     public class SuppliersCompletoResponse : SuppliersResponse
     {
-        public SuppliersCompletoResponse(Supplier supplier, ICollection<Product> products)
+        public SuppliersCompletoResponse(Supplier supplier)
            : base(supplier)
         {
             Cnpj = supplier.Cnpj;
 
-            Products = products.Select(product => new ProductsResponse(product)).ToList();
+            Products = supplier.Products.Select(product => new ProductsResponse(product)).ToList();
 
             //Products = new List<ProductsResponse>();
 

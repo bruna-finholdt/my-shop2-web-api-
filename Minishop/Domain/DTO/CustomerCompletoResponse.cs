@@ -5,11 +5,11 @@ namespace Minishop.Domain.DTO
 {
     public class CustomerCompletoResponse : CustomerResponse
     {
-        public CustomerCompletoResponse(Customer customer, ICollection<CustomerOrder> customerOrders)
+        public CustomerCompletoResponse(Customer customer)
       : base(customer)
         {
-            Orders = customerOrders.Select(order => new CustomerOrderResponse(order)).ToList();
-            TotalAmountSpent = customerOrders.Sum(order => order.TotalAmount);
+            Orders = customer.CustomerOrders.Select(order => new CustomerOrderResponse(order)).ToList();
+            TotalAmountSpent = customer.CustomerOrders.Sum(order => order.TotalAmount);
             Cpf = customer.Cpf;
         }
 

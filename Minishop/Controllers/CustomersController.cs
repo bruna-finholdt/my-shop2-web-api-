@@ -52,5 +52,22 @@ namespace Minishop.Controllers
             else
                 return NotFound(retorno);
         }
+        [HttpPost]
+        // FromBody para indicar de o corpo da requisição deve ser mapeado para o modelo
+        public async Task<IActionResult> Post([FromBody] CustomerCreateRequest postModel)
+        {
+            //Validação modelo de entrada
+            if (ModelState.IsValid)
+            {
+                var retorno = await _service.Cadastrar(postModel);
+                if (!retorno.Sucesso)
+                    return BadRequest(retorno);
+                else
+                    return Ok(retorno.Conteudo);
+            }
+            else
+                return BadRequest(ModelState);
+        }
+
     }
 }

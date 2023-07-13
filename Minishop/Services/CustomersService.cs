@@ -1,5 +1,6 @@
 ﻿using Minishop.DAL.Repositories;
 using Minishop.Domain.DTO;
+using Minishop.Domain.Entity;
 using Minishop.Services.Base;
 
 namespace Minishop.Services
@@ -61,12 +62,28 @@ namespace Minishop.Services
                 );
             }
 
-            var customerOrders = await _ordersRepository.PesquisarCustomerId(id);
+            //var customerOrders = await _ordersRepository.PesquisarCustomerId(id);
 
             return new ServiceResponse<CustomerCompletoResponse>(
-                new CustomerCompletoResponse(customer, customerOrders)
+                new CustomerCompletoResponse(customer)
             );
             //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
+        }
+
+        public async Task<ServiceResponse<CustomerResponse>> Cadastrar(CustomerCreateRequest novo)
+        {
+            var produto = new Customer()
+            {
+                FirstName = novo.FirstName,
+                LastName = novo.LastName,
+                Email = novo.Email,
+                Phone = novo.Phone,
+                Cpf = novo.Cpf
+            };
+
+            await _customersRepository.Cadastrar(produto);
+
+            return new ServiceResponse<CustomerResponse>(new CustomerResponse(produto));
         }
     }
 }

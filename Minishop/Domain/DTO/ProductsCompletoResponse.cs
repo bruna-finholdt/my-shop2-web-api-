@@ -4,10 +4,10 @@ namespace Minishop.Domain.DTO
 {
     public class ProductsCompletoResponse : ProductsResponse
     {
-        public ProductsCompletoResponse(Product product, Supplier supplier)
+        public ProductsCompletoResponse(Product product)
            : base(product)
         {
-            Supplier = new SuppliersResponse(supplier);
+            Supplier = new SuppliersResponse(product.Supplier);
         }
 
         public SuppliersResponse Supplier { get; private set; }
