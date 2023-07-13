@@ -33,10 +33,10 @@ namespace Minishop.DAL.Base
         ///// <see cref="https://docs.microsoft.com/dotnet/csharp/programming-guide/concepts/async/"/>
         ///// <param name="id">número inteiro do id da entidade</param>
         ///// <returns>Customer do id consultado ou não encontrado</returns>
-        public async Task<T?> PesquisaPorId(int id)//Para usar um método async, devemos colocar
-                                                   //async na assinatura, Task<> no retorno e
-                                                   //colocar o await na chamada de qualquer método
-                                                   //async interno.
+        public virtual async Task<T?> PesquisaPorId(int id)//Para usar um método async, devemos colocar
+                                                           //async na assinatura, Task<> no retorno e
+                                                           //colocar o await na chamada de qualquer método
+                                                           //async interno.
         {
             // select top 1 * from T where id = :id
             return await _minishop2023Context.Set<T>().FindAsync(id); //Para acessar a entidade usamos o método
@@ -51,12 +51,12 @@ namespace Minishop.DAL.Base
         ///// </summary>
         ///// <param name="novo">Nova entidade</param>
         ///// <returns>Entidade criada</returns>
-        //public async Task<T> Cadastrar(T novo)
-        //{
-        //    _minishop2023Context.Add(novo);
-        //    await _minishop2023Context.SaveChangesAsync(); // Todo o Entity está preparado para isso
-        //    return novo;
-        //}
+        public async Task<T> Cadastrar(T novo)
+        {
+            _minishop2023Context.Add(novo);
+            await _minishop2023Context.SaveChangesAsync(); // Todo o Entity está preparado para isso
+            return novo;
+        }
 
         ///// <summary>
         ///// Cadastra entidades enviadas
@@ -111,6 +111,18 @@ namespace Minishop.DAL.Base
         //        .Set<T>()
         //        .Skip(qtaPaginasAnteriores)
         //        .Take(qtdPagina)
+        //        .ToListAsync();
+        ////}
+
+        //public async Task<List<T>> Pesquisar() //Lista de T com paginação
+        //{
+        //    // Estou na página 4 (começando em 0), e tem 20 itens por página
+        //    // descarto os primeiro 80, pego os próximos 20
+        //    //(80 = 20 da pagina 0 + 20 da pagina 1 + 20 da pagina 2 + 20 da pag 3. Pego os proxs 20
+        //    //da pag 4, a que estou!)
+
+        //    return await _minishop2023Context
+        //        .Set<T>()
         //        .ToListAsync();
         //}
 

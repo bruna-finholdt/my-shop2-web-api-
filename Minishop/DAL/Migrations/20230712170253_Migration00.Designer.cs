@@ -12,7 +12,7 @@ using Minishop.DAL;
 namespace Minishop.DAL.Migrations
 {
     [DbContext(typeof(Minishop2023Context))]
-    [Migration("20230710182235_Migration00")]
+    [Migration("20230712170253_Migration00")]
     partial class Migration00
     {
         /// <inheritdoc />
@@ -177,7 +177,7 @@ namespace Minishop.DAL.Migrations
                         .HasColumnType("int")
                         .HasComment("Identificação do fornecedor (supplier)");
 
-                    b.Property<decimal>("UnitPrice")
+                    b.Property<decimal?>("UnitPrice")
                         .HasColumnType("decimal(12, 2)")
                         .HasComment("Preço unitário do produto");
 

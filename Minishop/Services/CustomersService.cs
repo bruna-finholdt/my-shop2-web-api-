@@ -8,10 +8,12 @@ namespace Minishop.Services
     {
         //usando o CustomersRepository via injeção de dependência:
         private readonly CustomersRepository _customersRepository;
+        private readonly OrdersRepository _ordersRepository;
 
-        public CustomersService(CustomersRepository customersRepository)
+        public CustomersService(CustomersRepository customersRepository, OrdersRepository ordersRepository)
         {
             _customersRepository = customersRepository;
+            _ordersRepository = ordersRepository;
         }
 
         public async Task<int> Contar()
@@ -45,8 +47,26 @@ namespace Minishop.Services
                 );
             }
             //No método de listagem de todos os customers, os usos do método Select da biblioteca Linq
-            //funcionam como um transformador para cada objeto da lista;
+            //funcionam como um transformador para cada objeto da lista
+        }
+        public async Task<ServiceResponse<CustomerCompletoResponse>> PesquisaPorId(int id)
+        //Para usar um método async, devemos colocar async na assinatura, Task<> no retorno e colocar o
+        //await na chamada de qualquer método async interno.
+        {
+            var customer = await _customersRepository.PesquisaPorId(id);
+            if (customer == null)
+            {
+                return new ServiceResponse<CustomerCompletoResponse>(
+                    "Cliente não encontrado"
+                );
+            }
 
+            var customerOrders = await _ordersRepository.PesquisarCustomerId(id);
+
+            return new ServiceResponse<CustomerCompletoResponse>(
+                new CustomerCompletoResponse(customer, customerOrders)
+            );
+            //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
         }
     }
 }

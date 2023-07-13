@@ -4,7 +4,7 @@ using Minishop.Domain.Entity;
 
 namespace Minishop.DAL.Repositories
 {
-    public class OrdersRepository : BaseRepository<OrderItem>
+    public class OrdersRepository : BaseRepository<CustomerOrder>
     {
         public OrdersRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
         {
@@ -29,5 +29,28 @@ namespace Minishop.DAL.Repositories
                 .Take(qtdPagina)
                 .ToListAsync();
         }
+
+        //public async Task<List<CustomerOrder>> PesquisarCustomerId(int customerId)
+        //{
+        //    return await _minishop2023Context
+        //            .Set<CustomerOrder>()
+        //            .Include(x => x.Customer)
+        //            .Include(x => x.OrderItems)
+        //            .Where(x => x.CustomerId == customerId)
+        //            .ToListAsync();
+        //}
+
+        public override async Task<CustomerOrder> PesquisaPorId(int id)
+        {
+            // select top 1 * from T where id = :id
+            return await _minishop2023Context
+                .CustomerOrders
+                .Include(x => x.Customer)
+                .Include(x => x.OrderItems)
+                    .ThenInclude(x => x.Product)
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

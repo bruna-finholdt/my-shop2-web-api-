@@ -75,7 +75,7 @@ namespace Minishop.DAL.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProductName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false, comment: "Nome do produto"),
                     SupplierId = table.Column<int>(type: "int", nullable: false, comment: "Identificação do fornecedor (supplier)"),
-                    UnitPrice = table.Column<decimal>(type: "decimal(12,2)", nullable: false, comment: "Preço unitário do produto"),
+                    UnitPrice = table.Column<decimal>(type: "decimal(12,2)", nullable: true, comment: "Preço unitário do produto"),
                     IsDiscontinued = table.Column<bool>(type: "bit", nullable: false, comment: "O produto está descontinuado"),
                     PackageName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true, comment: "Nome do pacote")
                 },

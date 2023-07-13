@@ -15,7 +15,7 @@ namespace Minishop.Domain.DTO
         public int Id { get; private set; }
         public DateTime OrderDate { get; private set; }
         public decimal TotalAmount { get; private set; }
-        public CustomerResponse Customer { get; private set; }
+        public CustomerResponse Customer { get; private set; } = null!;
         public int QuantityItems { get; private set; }
     }
 }

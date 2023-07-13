@@ -174,7 +174,7 @@ namespace Minishop.DAL.Migrations
                         .HasColumnType("int")
                         .HasComment("Identificação do fornecedor (supplier)");
 
-                    b.Property<decimal>("UnitPrice")
+                    b.Property<decimal?>("UnitPrice")
                         .HasColumnType("decimal(12, 2)")
                         .HasComment("Preço unitário do produto");
 

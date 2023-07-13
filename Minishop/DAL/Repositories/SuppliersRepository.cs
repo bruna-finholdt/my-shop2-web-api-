@@ -17,10 +17,12 @@ namespace Minishop.DAL.Repositories
 
             return await _minishop2023Context
                 .Set<Supplier>()
+                .Include(x => x.Products)
                 .OrderBy(product => product.CompanyName)
                 .Skip(qtaPaginasAnteriores)
                 .Take(qtdPagina)
                 .ToListAsync();
         }
+
     }
 }

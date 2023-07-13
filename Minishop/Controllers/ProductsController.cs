@@ -47,5 +47,16 @@ namespace Minishop.Controllers
             else
                 return NotFound(retorno);
         }
+
+        //[HttpGet]
+        //public async Task<IActionResult> Get()
+        //{
+        //    //Validação modelo de entrada
+        //    var retorno = await _service.Pesquisar();
+        //    if (retorno.Sucesso)
+        //        return Ok(retorno);
+        //    else
+        //        return BadRequest(retorno);
+        //}
     }
 }
