@@ -8,10 +8,12 @@ namespace Minishop.Services
     {
         //usando o CustomersRepository via injeção de dependência:
         private readonly SuppliersRepository _suppliersRepository;
+        private readonly ProductsRepository _productsRepository;
 
-        public SuppliersService(SuppliersRepository suppliersRepository)
+        public SuppliersService(SuppliersRepository suppliersRepository, ProductsRepository productsRepository)
         {
             _suppliersRepository = suppliersRepository;
+            _productsRepository = productsRepository;
         }
 
         public async Task<int> Contar()
@@ -48,5 +50,32 @@ namespace Minishop.Services
             //funcionam como um transformador para cada objeto da lista;
 
         }
+        public async Task<ServiceResponse<SuppliersCompletoResponse>> PesquisaPorId(int id)
+        //Para usar um método async, devemos colocar async na assinatura, Task<> no retorno e colocar o
+        //await na chamada de qualquer método async interno.
+        {
+            var supplier = await _suppliersRepository.PesquisaPorId(id);
+            if (supplier == null)
+            {
+                return new ServiceResponse<SuppliersCompletoResponse>(
+                    "Fornecedor não encontrado"
+                );
+            }
+
+            //if (id.GetType() != typeof(int))
+            //{
+            //    return new ServiceResponse<ProductsCompletoResponse>(
+            //        "O valor de Id não condiz com formato esperado"
+            //    );
+            //}
+
+            var products = await _productsRepository.PesquisarSupplierId(id);
+
+            return new ServiceResponse<SuppliersCompletoResponse>(
+                new SuppliersCompletoResponse(supplier, products)
+            );
+            //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
+        }
+
     }
 }

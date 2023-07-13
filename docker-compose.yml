@@ -6,7 +6,7 @@ services:
       - MSSQL_SA_PASSWORD=Cpc33UBI  #user: sa
       - ACCEPT_EULA=Y
     ports:
-      - "1433:1433"
+      - "3433:1433"
     volumes:
       - sqlserver:/var/opt/mssql
 

@@ -32,5 +32,16 @@ namespace Minishop.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Product>> PesquisarSupplierId(int supplierId)
+        {
+            return await _minishop2023Context
+                    .Set<Product>()
+                    .Include(x => x.Supplier)
+                    .Where(x => x.SupplierId == supplierId)
+                    .ToListAsync();
+        }
+
     }
+
+
 }

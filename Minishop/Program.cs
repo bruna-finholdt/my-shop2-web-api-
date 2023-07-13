@@ -16,12 +16,14 @@ builder.Services.AddScoped<CustomersRepository>();
 builder.Services.AddScoped<OrdersRepository>();
 builder.Services.AddScoped<SuppliersRepository>();
 builder.Services.AddScoped<ProductsRepository>();
+builder.Services.AddScoped<OrderItemsRepository>();
 
 // Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio
 builder.Services.AddTransient<CustomersService>();
 builder.Services.AddTransient<OrdersService>();
 builder.Services.AddTransient<ProductsService>();
 builder.Services.AddTransient<SuppliersService>();
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
