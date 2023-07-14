@@ -8,7 +8,7 @@ namespace Minishop.Domain.DTO
         public SuppliersCompletoResponse(Supplier supplier)
            : base(supplier)
         {
-            Cnpj = supplier.Cnpj;
+            
 
             Products = supplier.Products.Select(product => new ProductsResponse(product)).ToList();
 
@@ -18,9 +18,11 @@ namespace Minishop.Domain.DTO
             //{
             //    Products.Add(new ProductsResponse(product));
             //}
+            Cnpj = supplier.Cnpj;
         }
 
-        public string Cnpj { get; private set; }
+        
         public List<ProductsResponse> Products { get; private set; }
+        public string Cnpj { get; private set; }
     }
 }

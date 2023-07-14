@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Minishop.Services;
 using Minishop.Domain.DTO;
+using Minishop.Domain.DTO.Validation;
 
 namespace Minishop.Controllers
 {
@@ -9,9 +10,10 @@ namespace Minishop.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductsService _service;
+        private readonly IProductsService _service;
 
-        public ProductsController(ProductsService service)
+
+        public ProductsController(IProductsService service)
         {
             _service = service;
         }
@@ -37,10 +39,10 @@ namespace Minishop.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById([Id(ErrorMessage = "Valor de Id não condiz com formato esperado")] string id)
         {
             //Validação modelo de entrada
-            var retorno = await _service.PesquisaPorId(id);
+            var retorno = await _service.PesquisaPorId(int.Parse(id));
 
             if (retorno.Sucesso)
                 return Ok(retorno.Conteudo);
@@ -65,6 +67,27 @@ namespace Minishop.Controllers
                 return BadRequest(ModelState);
         }
 
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody] ProductUpdateRequest updateModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var retorno = await _service.Editar(id, updateModel);
+                if (!retorno.Sucesso)
+                {
+                    return BadRequest(retorno.Mensagem);
+                }
+                else
+                {
+                    return Ok(retorno.Conteudo);
+                }
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
+        }
 
 
     }
