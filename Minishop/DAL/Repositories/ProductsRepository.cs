@@ -4,7 +4,7 @@ using Minishop.Domain.Entity;
 
 namespace Minishop.DAL.Repositories
 {
-    public class ProductsRepository : BaseRepository<Product>
+    public class ProductsRepository : BaseRepository<Product>, IProductsRepository
     {
         public ProductsRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
         {
@@ -47,7 +47,6 @@ namespace Minishop.DAL.Repositories
             return await _minishop2023Context
                 .Products
                 .Include(x => x.Supplier)
-                    //.ThenInclude(x => x.OrderItems)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }

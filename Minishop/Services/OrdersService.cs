@@ -4,7 +4,7 @@ using Minishop.Services.Base;
 
 namespace Minishop.Services
 {
-    public class OrdersService
+    public class OrdersService : IOrdersService
     {
         //usando o CustomersRepository via injeção de dependência:
         private readonly OrdersRepository _ordersRepository;

@@ -1,4 +1,6 @@
-﻿using Minishop.DAL.Repositories;
+﻿using Microsoft.EntityFrameworkCore;
+using Minishop.DAL;
+using Minishop.DAL.Repositories;
 using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
 using Minishop.Services;
@@ -6,16 +8,19 @@ using Minishop.Services.Base;
 
 namespace Minishop.Services
 {
-    public class ProductsService
+    public class ProductsService : IProductsService
     {
-        //usando o CustomersRepository via injeção de dependência:
-        private readonly ProductsRepository _productsRepository;
-        private readonly SuppliersRepository _suppliersRepository;
+        //usando o Minishop2023Context via injeção de dependência:
+        private readonly Minishop2023Context _context;
 
-        public ProductsService(ProductsRepository productsRepository, SuppliersRepository suppliersRepository)
+        //usando o CustomersRepository via injeção de dependência:
+        private readonly IProductsRepository _productsRepository;
+
+
+        public ProductsService(Minishop2023Context context, IProductsRepository productsRepository)
         {
             _productsRepository = productsRepository;
-            _suppliersRepository = suppliersRepository;
+            _context = context;
         }
 
         public async Task<ProductCountResponse> Contar()
@@ -67,6 +72,8 @@ namespace Minishop.Services
         //await na chamada de qualquer método async interno.
         {
             var product = await _productsRepository.PesquisaPorId(id);
+
+
             if (product == null)
             {
                 return new ServiceResponse<ProductsCompletoResponse>(
@@ -74,23 +81,28 @@ namespace Minishop.Services
                 );
             }
 
-            if (id.GetType() != typeof(int))
-            {
-                return new ServiceResponse<ProductsCompletoResponse>(
-                    "O valor de Id não condiz com formato esperado"
-                );
-            }
-
-            //var supplier = await _suppliersRepository.PesquisaPorId(product.SupplierId);
 
             return new ServiceResponse<ProductsCompletoResponse>(
                 new ProductsCompletoResponse(product)
             );
-            //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
+
         }
 
         public async Task<ServiceResponse<ProductsResponse>> Cadastrar(ProductCreateRequest novo)
         {
+
+            if (novo.UnitPrice == null || !novo.UnitPrice.HasValue || novo.UnitPrice.Value == 0)
+            {
+                return new ServiceResponse<ProductsResponse>("O preço deve ser informado.");
+            }
+
+            // Verificar se o ID do fornecedor existe na base de dados
+            var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == novo.SupplierId);
+            if (!supplierExists)
+            {
+                return new ServiceResponse<ProductsResponse>("Fornecedor não encontrado.");
+            }
+
             var produto = new Product()
             {
                 ProductName = novo.ProductName,
@@ -105,6 +117,32 @@ namespace Minishop.Services
             return new ServiceResponse<ProductsResponse>(new ProductsResponse(produto));
         }
 
+
+        public async Task<ServiceResponse<Product>> Editar(int id, ProductUpdateRequest model)
+        {
+            var resultado = _context.Products.FirstOrDefault(x => x.Id == id);
+
+            if (resultado == null)
+            {
+                return new ServiceResponse<Product>("Produto não encontrado");
+            }
+            var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == model.SupplierId);
+            if (!supplierExists)
+            {
+                return new ServiceResponse<Product>("Fornecedor não encontrado.");
+            }
+
+            resultado.ProductName = model.ProductName;
+            resultado.UnitPrice = model.UnitPrice;
+            resultado.IsDiscontinued = model.IsDiscontinued;
+            resultado.PackageName = model.PackageName;
+            resultado.SupplierId = model.SupplierId;
+
+            _context.Entry(resultado).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return new ServiceResponse<Product>(resultado);
+        }
 
 
 

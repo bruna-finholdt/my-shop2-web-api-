@@ -1,20 +1,25 @@
-﻿using Minishop.DAL.Repositories;
+﻿using k8s.KubeConfigModels;
+using Microsoft.EntityFrameworkCore;
+using Minishop.DAL;
+using Minishop.DAL.Repositories;
 using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
 using Minishop.Services.Base;
 
 namespace Minishop.Services
 {
-    public class CustomersService
+    public class CustomersService : ICustomersService
     {
         //usando o CustomersRepository via injeção de dependência:
         private readonly CustomersRepository _customersRepository;
-        private readonly OrdersRepository _ordersRepository;
 
-        public CustomersService(CustomersRepository customersRepository, OrdersRepository ordersRepository)
+        private readonly Minishop2023Context _context;
+
+        public CustomersService(CustomersRepository customersRepository, Minishop2023Context context)
         {
             _customersRepository = customersRepository;
-            _ordersRepository = ordersRepository;
+            _context = context;
+
         }
 
         public async Task<int> Contar()
@@ -72,6 +77,19 @@ namespace Minishop.Services
 
         public async Task<ServiceResponse<CustomerResponse>> Cadastrar(CustomerCreateRequest novo)
         {
+
+            // Verificar se é um CNPJ novo e válido
+            if (_context.Customers.Any(s => s.Cpf == novo.Cpf))
+            {
+                return new ServiceResponse<CustomerResponse>("CPF duplicado");
+            }
+
+            // Verificar se é um e-mail novo e válido
+            if (_context.Customers.Any(s => s.Email == novo.Email))
+            {
+                return new ServiceResponse<CustomerResponse>("E-mail duplicado");
+            }
+
             var produto = new Customer()
             {
                 FirstName = novo.FirstName,
@@ -84,6 +102,30 @@ namespace Minishop.Services
             await _customersRepository.Cadastrar(produto);
 
             return new ServiceResponse<CustomerResponse>(new CustomerResponse(produto));
+        }
+
+        public async Task<ServiceResponse<Customer>> Editar(int id, CustomerUpdateRequest model)
+        {
+            var resultado = _context.Customers.FirstOrDefault(x => x.Id == id);
+
+            if (resultado == null)
+            {
+                return new ServiceResponse<Customer>("Cliente não encontrado");
+            }
+
+            // Verificar se é um e-mail novo e válido
+            if (_context.Customers.Any(s => s.Email == model.Email))
+            {
+                return new ServiceResponse<Customer>("E-mail duplicado");
+            }
+
+            resultado.Email = model.Email;
+            resultado.Phone = model.Phone;
+
+            _context.Entry(resultado).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return new ServiceResponse<Customer>(resultado);
         }
     }
 }

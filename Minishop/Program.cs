@@ -17,6 +17,13 @@ builder.Services.AddScoped<OrdersRepository>();
 builder.Services.AddScoped<SuppliersRepository>();
 builder.Services.AddScoped<ProductsRepository>();
 builder.Services.AddScoped<OrderItemsRepository>();
+builder.Services.AddScoped<IProductsService, ProductsService>();
+builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
+builder.Services.AddScoped<ICustomersService, CustomersService>();
+builder.Services.AddScoped<ISupplierService, SuppliersService>();
+builder.Services.AddScoped<IOrdersService, OrdersService>();
+
+
 
 // Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio
 builder.Services.AddTransient<CustomersService>();

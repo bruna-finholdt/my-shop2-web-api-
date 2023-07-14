@@ -9,9 +9,9 @@ namespace Minishop.Controllers
     [ApiController]
     public class SuppliersController : ControllerBase
     {
-        private readonly SuppliersService _service;
+        private readonly ISupplierService _service;
 
-        public SuppliersController(SuppliersService service)
+        public SuppliersController(ISupplierService service)
         {
             _service = service;
         }
@@ -69,6 +69,27 @@ namespace Minishop.Controllers
             }
             else
                 return BadRequest(ModelState);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody] SupplierUpdateRequest updateModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var retorno = await _service.Editar(id, updateModel);
+                if (!retorno.Sucesso)
+                {
+                    return BadRequest(retorno.Mensagem);
+                }
+                else
+                {
+                    return Ok(retorno.Conteudo);
+                }
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
         }
     }
 }

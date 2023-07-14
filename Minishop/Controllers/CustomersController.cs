@@ -8,9 +8,9 @@ namespace Minishop.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly CustomersService _service;
+        private readonly ICustomersService _service;
 
-        public CustomersController(CustomersService service)
+        public CustomersController(ICustomersService service)
         {
             _service = service;
         }
@@ -67,6 +67,27 @@ namespace Minishop.Controllers
             }
             else
                 return BadRequest(ModelState);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody] CustomerUpdateRequest updateModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var retorno = await _service.Editar(id, updateModel);
+                if (!retorno.Sucesso)
+                {
+                    return BadRequest(retorno.Mensagem);
+                }
+                else
+                {
+                    return Ok(retorno.Conteudo);
+                }
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
         }
 
     }
