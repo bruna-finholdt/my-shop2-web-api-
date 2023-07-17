@@ -22,7 +22,7 @@ builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<ISupplierService, SuppliersService>();
 builder.Services.AddScoped<IOrdersService, OrdersService>();
-
+builder.Services.AddScoped<ICustomersRepository, CustomersRepository>();
 
 
 // Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio

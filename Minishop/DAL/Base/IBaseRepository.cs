@@ -9,6 +9,6 @@ namespace Minishop.DAL.Base
         Task<int> Contagem();
         Task<T?> PesquisaPorId(int id);
         Task<T> Cadastrar(T novo);
-        //Task<T> Editar(int id, T novo);
+        Task<T> Editar(T model);
     }
 }

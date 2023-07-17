@@ -10,12 +10,12 @@ namespace Minishop.Services
 {
     public class CustomersService : ICustomersService
     {
-        //usando o CustomersRepository via injeção de dependência:
-        private readonly CustomersRepository _customersRepository;
+        private readonly ICustomersRepository _customersRepository;
 
-        private readonly Minishop2023Context _context;
+        //private readonly IMinishop2023Context _context;
+        private readonly ICustomersDbContext _context;
 
-        public CustomersService(CustomersRepository customersRepository, Minishop2023Context context)
+        public CustomersService(ICustomersRepository customersRepository, ICustomersDbContext context)
         {
             _customersRepository = customersRepository;
             _context = context;
@@ -90,7 +90,7 @@ namespace Minishop.Services
                 return new ServiceResponse<CustomerResponse>("E-mail duplicado");
             }
 
-            var produto = new Customer()
+            var customer = new Customer()
             {
                 FirstName = novo.FirstName,
                 LastName = novo.LastName,
@@ -99,9 +99,9 @@ namespace Minishop.Services
                 Cpf = novo.Cpf
             };
 
-            await _customersRepository.Cadastrar(produto);
+            await _customersRepository.Cadastrar(customer);
 
-            return new ServiceResponse<CustomerResponse>(new CustomerResponse(produto));
+            return new ServiceResponse<CustomerResponse>(new CustomerResponse(customer));
         }
 
         public async Task<ServiceResponse<Customer>> Editar(int id, CustomerUpdateRequest model)
