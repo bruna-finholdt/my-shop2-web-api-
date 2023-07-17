@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Minishop.DAL.Repositories;
 using Minishop.Domain.Entity;
 
 namespace Minishop.DAL;
 
-public partial class Minishop2023Context : DbContext
+public partial class Minishop2023Context : DbContext, ICustomersDbContext
 {
 
     public Minishop2023Context(DbContextOptions<Minishop2023Context> options)
@@ -22,6 +24,8 @@ public partial class Minishop2023Context : DbContext
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Supplier> Suppliers { get; set; }
+
+    EntityEntry ICustomersDbContext.Entry(object entity) => Entry(entity);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

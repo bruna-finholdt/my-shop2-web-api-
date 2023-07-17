@@ -4,7 +4,7 @@ using Minishop.Domain.Entity;
 
 namespace Minishop.DAL.Repositories
 {
-    public class CustomersRepository : BaseRepository<Customer>
+    public class CustomersRepository : BaseRepository<Customer>, ICustomersRepository
     {
         public CustomersRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
         {

@@ -33,8 +33,4 @@
 		<ProjectReference Include="..\Minishop\Minishop.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="Repositories\" />
-	</ItemGroup>
-
 </Project>
