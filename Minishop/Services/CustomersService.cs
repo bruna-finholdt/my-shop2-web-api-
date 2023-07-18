@@ -12,13 +12,13 @@ namespace Minishop.Services
     {
         private readonly ICustomersRepository _customersRepository;
 
-        //private readonly IMinishop2023Context _context;
-        private readonly ICustomersDbContext _context;
+        ////private readonly IMinishop2023Context _context;
+        //private readonly ICustomersDbContext _context;
 
-        public CustomersService(ICustomersRepository customersRepository, ICustomersDbContext context)
+        public CustomersService(ICustomersRepository customersRepository)
         {
             _customersRepository = customersRepository;
-            _context = context;
+            //_context = context;
 
         }
 
@@ -75,57 +75,86 @@ namespace Minishop.Services
             //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
         }
 
-        public async Task<ServiceResponse<CustomerResponse>> Cadastrar(CustomerCreateRequest novo)
+
+        public async Task<ServiceResponse<CustomerResponse>> Cadastrar(CustomerCreateRequest model)
         {
-
-            // Verificar se é um CNPJ novo e válido
-            if (_context.Customers.Any(s => s.Cpf == novo.Cpf))
+            // Verificar se o CPF já está em uso (opcional, dependendo dos requisitos)
+            var cpfExists = await _customersRepository.VerificarCpfExistente(model.Cpf);
+            if (cpfExists)
             {
-                return new ServiceResponse<CustomerResponse>("CPF duplicado");
+                return new ServiceResponse<CustomerResponse>("CPF já cadastrado.");
             }
 
-            // Verificar se é um e-mail novo e válido
-            if (_context.Customers.Any(s => s.Email == novo.Email))
+            // Verificar se o e-mail já está em uso (opcional, dependendo dos requisitos)
+            var emailExists = await _customersRepository.VerificarEmailExistente(model.Email);
+            if (emailExists)
             {
-                return new ServiceResponse<CustomerResponse>("E-mail duplicado");
+                return new ServiceResponse<CustomerResponse>("E-mail já cadastrado.");
             }
 
-            var customer = new Customer()
+            // Mapear o CustomerCreateRequest para a entidade Customer
+            var customer = new Customer
             {
-                FirstName = novo.FirstName,
-                LastName = novo.LastName,
-                Email = novo.Email,
-                Phone = novo.Phone,
-                Cpf = novo.Cpf
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Phone = model.Phone,
+                Cpf = model.Cpf
+                // Preencha outras propriedades da entidade, se houver
             };
 
-            await _customersRepository.Cadastrar(customer);
+            // Chamar o método Cadastrar do repositório para salvar o novo cliente no banco de dados
+            var createdCustomer = await _customersRepository.Cadastrar(customer);
 
-            return new ServiceResponse<CustomerResponse>(new CustomerResponse(customer));
+            // Verificar se o cadastro foi realizado com sucesso
+            if (createdCustomer == null)
+            {
+                return new ServiceResponse<CustomerResponse>("Erro ao cadastrar cliente.");
+            }
+
+            // Criar o objeto CustomerResponse para retornar ao cliente
+            var response = new CustomerResponse(createdCustomer);
+
+            return new ServiceResponse<CustomerResponse>(response);
         }
 
-        public async Task<ServiceResponse<Customer>> Editar(int id, CustomerUpdateRequest model)
+        public async Task<ServiceResponse<CustomerResponse>> Editar(int id, CustomerUpdateRequest model)
         {
-            var resultado = _context.Customers.FirstOrDefault(x => x.Id == id);
-
-            if (resultado == null)
+            // Verificar se o cliente com o ID fornecido existe no banco de dados
+            var existingCustomer = await _customersRepository.PesquisaPorId(id);
+            if (existingCustomer == null)
             {
-                return new ServiceResponse<Customer>("Cliente não encontrado");
+                return new ServiceResponse<CustomerResponse>("Cliente não encontrado.");
             }
 
-            // Verificar se é um e-mail novo e válido
-            if (_context.Customers.Any(s => s.Email == model.Email))
+
+            // Verificar se o e-mail é novo e válido (não duplicado)
+            var newEmailExists = await _customersRepository.VerificarNovoEmailExistente(model.Email, id);
+            if (newEmailExists)
             {
-                return new ServiceResponse<Customer>("E-mail duplicado");
+                return new ServiceResponse<CustomerResponse>("E-mail duplicado.");
             }
 
-            resultado.Email = model.Email;
-            resultado.Phone = model.Phone;
+            // Atualizar os campos do cliente com os valores do modelo
+            existingCustomer.Email = model.Email;
+            existingCustomer.Phone = model.Phone;
+            // Atualize outras propriedades do cliente, se houver
 
-            _context.Entry(resultado).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            // Chamar o método Editar do repositório para salvar as alterações no banco de dados
+            var updatedCustomer = await _customersRepository.Editar(existingCustomer);
 
-            return new ServiceResponse<Customer>(resultado);
+            // Verificar se a edição foi realizada com sucesso
+            if (updatedCustomer == null)
+            {
+                return new ServiceResponse<CustomerResponse>("Erro ao editar cliente.");
+            }
+
+            // Criar o objeto CustomerResponse para retornar ao cliente
+            var response = new CustomerResponse(updatedCustomer);
+
+            return new ServiceResponse<CustomerResponse>(response);
         }
+
+
     }
 }

@@ -10,12 +10,12 @@ namespace Minishop.Services
     public class SuppliersService : ISupplierService
     {
         //usando o CustomersRepository via injeção de dependência:
-        private readonly SuppliersRepository _suppliersRepository;
-        private readonly Minishop2023Context _context;
-        public SuppliersService(SuppliersRepository suppliersRepository, Minishop2023Context context)
+        private readonly ISuppliersRepository _suppliersRepository;
+        //private readonly ICustomersDbContext _context;
+        public SuppliersService(ISuppliersRepository suppliersRepository)
         {
             _suppliersRepository = suppliersRepository;
-            _context = context;
+            //_context = context;
         }
 
         public async Task<int> Contar()
@@ -53,8 +53,7 @@ namespace Minishop.Services
 
         }
         public async Task<ServiceResponse<SuppliersCompletoResponse>> PesquisaPorId(int id)
-        //Para usar um método async, devemos colocar async na assinatura, Task<> no retorno e colocar o
-        //await na chamada de qualquer método async interno.
+
         {
             var supplier = await _suppliersRepository.PesquisaPorId(id);
             if (supplier == null)
@@ -63,33 +62,25 @@ namespace Minishop.Services
                     "Fornecedor não encontrado"
                 );
             }
-
-            //if (id.GetType() != typeof(int))
-            //{
-            //    return new ServiceResponse<ProductsCompletoResponse>(
-            //        "O valor de Id não condiz com formato esperado"
-            //    );
-            //}
-
-            //var products = await _productsRepository.PesquisarSupplierId(id);
-
             return new ServiceResponse<SuppliersCompletoResponse>(
                 new SuppliersCompletoResponse(supplier)
             );
-            //pra pesquisa de customer por id, usa-se o CustomerCompletoResponse (com tds as informações)
+
         }
 
         public async Task<ServiceResponse<SuppliersResponse>> Cadastrar(SupplierCreateRequest novo)
         {
 
-            // Verificar se é um CNPJ novo e válido
-            if (_context.Suppliers.Any(s => s.Cnpj == novo.Cnpj))
+            // Verificar se o CNPJ já está em uso
+            var cnpjExists = await _suppliersRepository.VerificarCnpjExistente(novo.Cnpj);
+            if (cnpjExists)
             {
                 return new ServiceResponse<SuppliersResponse>("CNPJ duplicado");
             }
 
-            // Verificar se é um e-mail novo e válido
-            if (_context.Suppliers.Any(s => s.Email == novo.Email))
+            // Verificar se o e-mail já está em uso
+            var emailExists = await _suppliersRepository.VerificarEmailExistente(novo.Email);
+            if (emailExists)
             {
                 return new ServiceResponse<SuppliersResponse>("E-mail duplicado");
             }
@@ -112,44 +103,67 @@ namespace Minishop.Services
                 ContactName = novo.ContactName
             };
 
-            await _suppliersRepository.Cadastrar(supplier);
+            var createdSupplier = await _suppliersRepository.Cadastrar(supplier);
 
-            return new ServiceResponse<SuppliersResponse>(new SuppliersResponse(supplier));
-        }
-
-        public async Task<ServiceResponse<Supplier>> Editar(int id, SupplierUpdateRequest model)
-        {
-            var resultado = _context.Suppliers.FirstOrDefault(x => x.Id == id);
-
-            if (resultado == null)
+            if (createdSupplier == null)
             {
-                return new ServiceResponse<Supplier>("Fornecedor não encontrado");
+                return new ServiceResponse<SuppliersResponse>("Erro ao cadastrar fornecedor.");
             }
 
-            // Verificar se é um e-mail novo e válido
-            if (_context.Suppliers.Any(s => s.Email == model.Email))
+            var response = new SuppliersResponse(createdSupplier);
+
+            return new ServiceResponse<SuppliersResponse>(response);
+        }
+
+        public async Task<ServiceResponse<SuppliersResponse>> Editar(int id, SupplierUpdateRequest model)
+        {
+            // Verificar se o fornecedor com o ID fornecido existe no banco de dados
+            var existingSupplier = await _suppliersRepository.PesquisaPorId(id);
+            if (existingSupplier == null)
             {
-                return new ServiceResponse<Supplier>("E-mail duplicado");
+                return new ServiceResponse<SuppliersResponse>("Fornecedor não encontrado.");
+            }
+
+            // Verificar se o e-mail foi alterado e se é novo e válido
+            if (existingSupplier.Email != model.Email)
+            {
+                var emailExists = await _suppliersRepository.VerificarEmailExistente2(model.Email, id);
+                if (emailExists)
+                {
+                    return new ServiceResponse<SuppliersResponse>("E-mail duplicado.");
+                }
             }
 
             // Verificar se estado corresponde a uma das 27 siglas de estados brasileiros
             var estadosBrasileiros = new[] { "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO" };
             if (!estadosBrasileiros.Contains(model.Uf))
             {
-                return new ServiceResponse<Supplier>("Estado inválido");
+                return new ServiceResponse<SuppliersResponse>("Estado inválido.");
             }
 
-            resultado.Email = model.Email;
-            resultado.City = model.City;
-            resultado.Uf = model.Uf;
-            resultado.Phone = model.Phone;
-            resultado.ContactName = model.ContactName;
+            // Atualizar os campos do fornecedor com os valores do modelo
+            existingSupplier.Email = model.Email;
+            existingSupplier.Phone = model.Phone;
+            existingSupplier.City = model.City;
+            existingSupplier.Uf = model.Uf;
+            existingSupplier.ContactName = model.ContactName;
+            // Atualize outras propriedades do fornecedor, se houver
 
-            _context.Entry(resultado).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            // Chamar o método Editar do repositório para salvar as alterações no banco de dados
+            var updatedSupplier = await _suppliersRepository.Editar(existingSupplier);
 
-            return new ServiceResponse<Supplier>(resultado);
+            // Verificar se a edição foi realizada com sucesso
+            if (updatedSupplier == null)
+            {
+                return new ServiceResponse<SuppliersResponse>("Erro ao editar fornecedor.");
+            }
+
+            // Criar o objeto SuppliersResponse para retornar ao cliente
+            var response = new SuppliersResponse(updatedSupplier);
+
+            return new ServiceResponse<SuppliersResponse>(response);
         }
+
 
     }
 }

@@ -11,6 +11,6 @@ namespace Minishop.Services
         Task<ServicePagedResponse<CustomerResponse>> Pesquisar(PageQueryRequest queryResquest);
         Task<ServiceResponse<CustomerCompletoResponse>> PesquisaPorId(int id);
         Task<ServiceResponse<CustomerResponse>> Cadastrar(CustomerCreateRequest novo);
-        Task<ServiceResponse<Customer>> Editar(int id, CustomerUpdateRequest model);
+        Task<ServiceResponse<CustomerResponse>> Editar(int id, CustomerUpdateRequest model);
     }
 }

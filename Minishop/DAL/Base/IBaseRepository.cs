@@ -7,7 +7,7 @@ namespace Minishop.DAL.Base
     public interface IBaseRepository<T> where T : class
     {
         Task<int> Contagem();
-        Task<T?> PesquisaPorId(int id);
+        //Task<T?> PesquisaPorId(int id);
         Task<T> Cadastrar(T novo);
         Task<T> Editar(T model);
     }

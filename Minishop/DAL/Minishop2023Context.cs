@@ -7,7 +7,7 @@ using Minishop.Domain.Entity;
 
 namespace Minishop.DAL;
 
-public partial class Minishop2023Context : DbContext, ICustomersDbContext
+public partial class Minishop2023Context : DbContext
 {
 
     public Minishop2023Context(DbContextOptions<Minishop2023Context> options)
@@ -25,7 +25,7 @@ public partial class Minishop2023Context : DbContext, ICustomersDbContext
 
     public virtual DbSet<Supplier> Suppliers { get; set; }
 
-    EntityEntry ICustomersDbContext.Entry(object entity) => Entry(entity);
+    //EntityEntry ICustomersDbContext.Entry(object entity) => Entry(entity);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

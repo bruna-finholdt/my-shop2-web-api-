@@ -7,5 +7,8 @@ namespace Minishop.DAL.Repositories
     {
         Task<List<Customer>> Pesquisar(int paginaAtual, int qtdPagina);
         Task<Customer> PesquisaPorId(int id);
+        Task<bool> VerificarCpfExistente(string cpf);
+        Task<bool> VerificarEmailExistente(string email);
+        Task<bool> VerificarNovoEmailExistente(string email, int id);
     }
 }

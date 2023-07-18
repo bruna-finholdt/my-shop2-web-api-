@@ -11,16 +11,16 @@ namespace Minishop.Services
     public class ProductsService : IProductsService
     {
         //usando o Minishop2023Context via injeção de dependência:
-        private readonly Minishop2023Context _context;
+        //private readonly ICustomersDbContext _context;
 
         //usando o CustomersRepository via injeção de dependência:
         private readonly IProductsRepository _productsRepository;
 
 
-        public ProductsService(Minishop2023Context context, IProductsRepository productsRepository)
+        public ProductsService(IProductsRepository productsRepository)
         {
             _productsRepository = productsRepository;
-            _context = context;
+
         }
 
         public async Task<ProductCountResponse> Contar()
@@ -88,6 +88,7 @@ namespace Minishop.Services
 
         }
 
+
         public async Task<ServiceResponse<ProductsResponse>> Cadastrar(ProductCreateRequest novo)
         {
 
@@ -96,14 +97,14 @@ namespace Minishop.Services
                 return new ServiceResponse<ProductsResponse>("O preço deve ser informado.");
             }
 
-            // Verificar se o ID do fornecedor existe na base de dados
-            var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == novo.SupplierId);
+            // Verificar se o Id de supplier enviado existe na base de dados
+            var supplierExists = await _productsRepository.VerificarFornecedorExistente(novo.SupplierId);
             if (!supplierExists)
             {
                 return new ServiceResponse<ProductsResponse>("Fornecedor não encontrado.");
             }
 
-            var produto = new Product()
+            var produto = new Product
             {
                 ProductName = novo.ProductName,
                 SupplierId = novo.SupplierId,
@@ -112,37 +113,58 @@ namespace Minishop.Services
                 PackageName = novo.PackageName
             };
 
-            await _productsRepository.Cadastrar(produto);
+            var createdProduct = await _productsRepository.Cadastrar(produto);
 
-            return new ServiceResponse<ProductsResponse>(new ProductsResponse(produto));
+            if (createdProduct == null)
+            {
+                return new ServiceResponse<ProductsResponse>("Erro ao cadastrar produto.");
+            }
+
+            var response = new ProductsResponse(createdProduct);
+
+            return new ServiceResponse<ProductsResponse>(response);
         }
 
 
-        public async Task<ServiceResponse<Product>> Editar(int id, ProductUpdateRequest model)
+        public async Task<ServiceResponse<ProductsResponse>> Editar(int id, ProductUpdateRequest model)
         {
-            var resultado = _context.Products.FirstOrDefault(x => x.Id == id);
-
-            if (resultado == null)
+            // Verificar se o produto com o ID fornecido existe no banco de dados
+            var existingProduct = await _productsRepository.PesquisaPorId(id);
+            if (existingProduct == null)
             {
-                return new ServiceResponse<Product>("Produto não encontrado");
+                return new ServiceResponse<ProductsResponse>("Produto não encontrado.");
             }
-            var supplierExists = await _context.Suppliers.AnyAsync(s => s.Id == model.SupplierId);
+
+            // Verificar se o ID do fornecedor enviado existe na base de dados
+            var supplierExists = await _productsRepository.VerificarFornecedorExistente(model.SupplierId);
             if (!supplierExists)
             {
-                return new ServiceResponse<Product>("Fornecedor não encontrado.");
+                return new ServiceResponse<ProductsResponse>("Fornecedor não encontrado.");
             }
 
-            resultado.ProductName = model.ProductName;
-            resultado.UnitPrice = model.UnitPrice;
-            resultado.IsDiscontinued = model.IsDiscontinued;
-            resultado.PackageName = model.PackageName;
-            resultado.SupplierId = model.SupplierId;
+            // Atualizar os campos do produto com os valores do modelo
+            existingProduct.ProductName = model.ProductName;
+            existingProduct.SupplierId = model.SupplierId;
+            existingProduct.UnitPrice = model.UnitPrice;
+            existingProduct.IsDiscontinued = model.IsDiscontinued;
+            existingProduct.PackageName = model.PackageName;
+            // Atualize outras propriedades do produto, se houver
 
-            _context.Entry(resultado).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            // Chamar o método Editar do repositório para salvar as alterações no banco de dados
+            var updatedProduct = await _productsRepository.Editar(existingProduct);
 
-            return new ServiceResponse<Product>(resultado);
+            // Verificar se a edição foi realizada com sucesso
+            if (updatedProduct == null)
+            {
+                return new ServiceResponse<ProductsResponse>("Erro ao editar produto.");
+            }
+
+            // Criar o objeto ProductsResponse para retornar ao cliente
+            var response = new ProductsResponse(updatedProduct);
+
+            return new ServiceResponse<ProductsResponse>(response);
         }
+
 
 
 

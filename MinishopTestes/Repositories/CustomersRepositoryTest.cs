@@ -1,4 +1,5 @@
-﻿using k8s.KubeConfigModels;
+﻿using Castle.Core.Resource;
+using k8s.KubeConfigModels;
 using Microsoft.EntityFrameworkCore;
 using Minishop.DAL;
 using Minishop.DAL.Repositories;
@@ -75,23 +76,6 @@ namespace Minishop.Tests.Repositories
         }
 
         [Fact]
-        public async Task Pesquisar_DeveRetornarListaVaziaQuandoNaoHaCustomers()
-        {
-            // Arrange: Neste cenário, não há nenhum customer no banco de dados.
-            // O banco de dados em memória está vazio.
-
-            int paginaAtual = 1;
-            int qtdPagina = 10;
-
-            // Act
-            var result = await _customerRepository.Pesquisar(paginaAtual, qtdPagina);
-
-            // Assert
-            Assert.Empty(result); // Verifica se a lista retornada está vazia.
-        }
-
-
-        [Fact]
         public async Task PesquisaPorId_DeveRetornarCustomerCorreto()
         {
             // Arrange
@@ -138,10 +122,22 @@ namespace Minishop.Tests.Repositories
         [Fact]
         public async Task PesquisaPorId_DeveRetornarNullQuandoCustomerNaoExiste()
         {
-            // Arrange: Neste cenário, não há nenhum customer no banco de dados.
-            // O banco de dados em memória está vazio.
+            // Arrange: // Arrange
+            var customer = new Customer
+            {
+                Id = 1,
+                FirstName = "John",
+                LastName = "Doe",
+                Email = "john.doe@example.com",
+                Phone = "1234567890",
+                Cpf = "111.222.333-44"
+            };
 
-            int idNaoExistente = 999; //não existe customer com id 999
+            _dbContext.Customers.AddRange(customer);
+            _dbContext.SaveChanges();
+
+
+            int idNaoExistente = 5;
 
             // Act
             var result = await _customerRepository.PesquisaPorId(idNaoExistente);

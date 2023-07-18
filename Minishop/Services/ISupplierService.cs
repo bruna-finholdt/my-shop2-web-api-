@@ -11,6 +11,6 @@ namespace Minishop.Services
         Task<ServicePagedResponse<SuppliersResponse>> Pesquisar(PageQueryRequest queryRequest);
         Task<ServiceResponse<SuppliersCompletoResponse>> PesquisaPorId(int id);
         Task<ServiceResponse<SuppliersResponse>> Cadastrar(SupplierCreateRequest novo);
-        Task<ServiceResponse<Supplier>> Editar(int id, SupplierUpdateRequest model);
+        Task<ServiceResponse<SuppliersResponse>> Editar(int id, SupplierUpdateRequest model);
     }
 }

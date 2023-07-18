@@ -33,18 +33,11 @@ namespace Minishop.DAL.Base
         /// <see cref="https://docs.microsoft.com/dotnet/csharp/programming-guide/concepts/async/"/>
         /// <param name="id">número inteiro do id da entidade</param>
         /// <returns>Customer do id consultado ou não encontrado</returns>
-        public virtual async Task<T?> PesquisaPorId(int id)//Para usar um método async, devemos colocar
-                                                           //async na assinatura, Task<> no retorno e
-                                                           //colocar o await na chamada de qualquer método
-                                                           //async interno.
+        public virtual async Task<T?> PesquisaPorId(int id)
         {
             // select top 1 * from T where id = :id
-            return await _minishop2023Context.Set<T>().FindAsync(id); //Para acessar a entidade usamos o método
-                                                                      //Set< T>() ele nos dá a possibilidade de
-                                                                      //acessar a tabela da entidade T, que assumirá
-                                                                      //o valor de cada uma das entidades 
+            return await _minishop2023Context.Set<T>().FindAsync(id);
         }
-
 
         /// <summary>
         /// Cadastra entidade enviada
@@ -69,8 +62,5 @@ namespace Minishop.DAL.Base
             await _minishop2023Context.SaveChangesAsync();
             return model;
         }
-
-
-
     }
 }

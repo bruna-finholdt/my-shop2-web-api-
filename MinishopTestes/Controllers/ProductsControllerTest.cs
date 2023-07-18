@@ -1,265 +1,309 @@
-﻿//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.Mvc;
-//using Minishop.Controllers;
-//using Minishop.Domain.DTO;
-//using Minishop.Domain.Entity;
-//using Minishop.Services;
-//using Minishop.Services.Base;
-//using Moq;
-//using Xunit;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Minishop.Controllers;
+using Minishop.Domain.DTO;
+using Minishop.Domain.Entity;
+using Minishop.Services;
+using Minishop.Services.Base;
+using Moq;
+using Xunit;
 
-//namespace Minishop.Tests.Controllers
-//{
-//    public class ProductsControllerTests
-//    {
-//        private readonly Mock<IProductsService> _mockService;
-//        private readonly ProductsController _controller;
+namespace Minishop.Tests.Controllers
+{
+    public class ProductsControllerTests
+    {
+        private readonly Mock<IProductsService> _mockService;
+        private readonly ProductsController _controller;
 
-//        public ProductsControllerTests()
-//        {
-//            _mockService = new Mock<IProductsService>();
-//            _controller = new ProductsController(_mockService.Object);
-//        }
+        public ProductsControllerTests()
+        {
+            _mockService = new Mock<IProductsService>();
+            _controller = new ProductsController(_mockService.Object);
+        }
 
-//        [Fact]
-//        public async Task ObterContagem_DeveRetornarOk()
-//        {
-//            // Arrange
-//            var response = new ProductCountResponse
-//            {
-//                ItemCount = 10,
-//                ActiveCount = 8,
-//                InactiveCount = 2
-//            };
+        [Fact]
+        public async Task ObterContagem_DeveRetornarOk()
+        {
+            // Arrange
+            var expectedTotalCount = 100;
+            var expectedActiveCount = 80;
+            var expectedInactiveCount = 20;
 
-//            _mockService.Setup(service => service.Contar())
-//                .ReturnsAsync(response);
+            var productCountResponse = new ProductCountResponse
+            {
+                ItemCount = expectedTotalCount,
+                ActiveCount = expectedActiveCount,
+                InactiveCount = expectedInactiveCount
+            };
 
-//            // Act
-//            var result = await _controller.ObterContagem();
+            _mockService.Setup(service => service.Contar())
+                .ReturnsAsync(productCountResponse);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result.Result);
-//            var okResult = result.Result as OkObjectResult;
-//            Assert.Equal(response, okResult.Value);
-//        }
+            // Act
+            var result = await _controller.ObterContagem();
 
-//        [Fact]
-//        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            var queryRequest = new PageQueryRequest
-//            {
-//                PaginaAtual = 1,
-//                Quantidade = 10
-//            };
-//            var response = new ServicePagedResponse<ProductsResponse>(
-//                new ProductsResponse[] { /* mock response */ },
-//                10,
-//                1,
-//                10
-//            );
+            // Assert
+            Assert.IsType<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            var response = (ProductCountResponse)okResult.Value; // Convert to ProductCountResponse
 
-//            _mockService.Setup(service => service.Pesquisar(queryRequest))
-//                .ReturnsAsync(response);
+            // Check if the response values match the expected counts
+            Assert.Equal(expectedTotalCount, response.ItemCount);
+            Assert.Equal(expectedActiveCount, response.ActiveCount);
+            Assert.Equal(expectedInactiveCount, response.InactiveCount);
+        }
 
-//            // Act
-//            var result = await _controller.Get(queryRequest);
+        [Fact]
+        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            var queryRequest = new PageQueryRequest
+            {
+                PaginaAtual = 1,
+                Quantidade = 10
+            };
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response, okResult.Value);
-//        }
+            var products = new List<ProductsResponse>
+    {
+        new ProductsResponse(new Product
+        {
+            Id = 1,
+            ProductName = "Product 1",
+            SupplierId = 1,
+            UnitPrice = 10.99m,
+            IsDiscontinued = false,
+            PackageName = "Package 1"
+        }),
 
-//        [Fact]
-//        public async Task Get_DeveRetornarBadRequestQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            var queryRequest = new PageQueryRequest
-//            {
-//                PaginaAtual = 1,
-//                Quantidade = 10
-//            };
-//            var response = new ServicePagedResponse<ProductsResponse>(
-//                mensagemDeErro: "Erro na pesquisa"
-//            );
+        new ProductsResponse(new Product
+        {
+            Id = 2,
+            ProductName = "Product 2",
+            SupplierId = 2,
+            UnitPrice = 5.99m,
+            IsDiscontinued = true,
+            PackageName = "Package 2"
+        }),
+    };
 
-//            _mockService.Setup(service => service.Pesquisar(queryRequest))
-//                .ReturnsAsync(response);
+            var response = new ServicePagedResponse<ProductsResponse>(
+                products,
+                10,
+                1,
+                10
+            );
 
-//            // Act
-//            var result = await _controller.Get(queryRequest);
+            _mockService.Setup(service => service.Pesquisar(queryRequest))
+                .ReturnsAsync(response);
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.Equal(response, badRequestResult.Value);
-//        }
+            // Act
+            var result = await _controller.Get(queryRequest);
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var product = new Product
-//            {
-//                Id = 1,
-//                ProductName = "Test",
-//                IsDiscontinued = true,
-//                OrderItems = new[]
-//                {
-//                   new OrderItem
-//                   {
-//                       Id = 1,
-//                   }
-//                },
-//                PackageName = "Test",
-//                Supplier = new Supplier { Id = 1 },
-//                SupplierId = 1,
-//                UnitPrice = 10,
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
 
-//            };
-//            var response = new ServiceResponse<ProductsCompletoResponse>(
-//                new ProductsCompletoResponse(product)
-//            );
+            var resultValue = okResult.Value as ServicePagedResponse<ProductsResponse>;
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            Assert.Equal(response.Conteudo, resultValue.Conteudo);
+            Assert.Equal(response.PaginaAtual, resultValue.PaginaAtual);
+            Assert.Equal(response.TotalPaginas, resultValue.TotalPaginas);
+        }
 
-//            // Act
-//            var result = await _controller.GetById(id.ToString());
+        [Fact]
+        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            int id = 1;
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            var product = new Product
+            {
+                Id = id,
+                ProductName = "Product 1",
+                SupplierId = 1,
+                UnitPrice = 10.99m,
+                IsDiscontinued = false,
+                PackageName = "Package 1"
+            };
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarNotFoundQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var response = new ServiceResponse<ProductsCompletoResponse>(
-//                mensagemDeErro: "Produto não encontrado"
-//            );
+            var response = new ServiceResponse<ProductsCompletoResponse>(new ProductsCompletoResponse(product));
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(response);
 
-//            // Act
-//            var result = await _controller.GetById(id.ToString());
+            // Act
+            var result = await _controller.GetById(id.ToString());
 
-//            // Assert
-//            Assert.IsType<NotFoundObjectResult>(result);
-//            var notFoundResult = result as NotFoundObjectResult;
-//            Assert.Equal(response, notFoundResult.Value);
-//        }
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(response.Conteudo, okResult.Value);
+        }
 
-//        [Fact]
-//        public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            var request = new ProductCreateRequest { /* mock request */ };
-//            var product = new Product { /* mock product */ };
-//            var response = new ServiceResponse<ProductsResponse>(
-//                new ProductsResponse(product)
-//            );
+        [Fact]
+        public async Task GetById_DeveRetornarNotFoundQuandoIdForInvalido()
+        {
+            // Arrange
+            int id = 5;
 
-//            _mockService.Setup(service => service.Cadastrar(request))
-//                .ReturnsAsync(response);
+            string mensagem = "Produto não encontrado";
 
-//            // Act
-//            var result = await _controller.Post(request);
+            var retorno = new ServiceResponse<ProductsCompletoResponse>(mensagem);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(retorno);
 
-//        [Fact]
-//        public async Task Post_DeveRetornarBadRequestQuandoModelInvalido()
-//        {
-//            // Arrange
-//            var request = new ProductCreateRequest { /* mock invalid request */ };
-//            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+            // Act
+            var result = await _controller.GetById(id.ToString());
 
-//            // Act
-//            var result = await _controller.Post(request);
+            // Assert
+            var NotFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var response = Assert.IsType<ServiceResponse<ProductsCompletoResponse>>(NotFoundResult.Value);
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.IsType<SerializableError>(badRequestResult.Value);
-//        }
+            Assert.False(response.Sucesso);
+            Assert.Equal(mensagem, response.Mensagem);
+        }
 
-//        [Fact]
-//        public async Task Put_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var request = new ProductUpdateRequest { /* mock request */ };
-//            var product = new Product { /* mock product */ };
-//            var response = new ServiceResponse<Product>(
-//                new Product(/* mock response */)
-//            );
+        [Fact]
+        public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            var productCreateRequest = new ProductCreateRequest
+            {
+                ProductName = "New Product",
+                SupplierId = 1,
+                UnitPrice = 19.99m,
+                IsDiscontinued = false,
+                PackageName = "New Package"
+            };
 
-//            _mockService.Setup(service => service.Editar(id, request))
-//                .ReturnsAsync(response);
+            var product = new Product
+            {
+                Id = 1,
+                ProductName = "New Product",
+                SupplierId = 1,
+                UnitPrice = 19.99m,
+                IsDiscontinued = false,
+                PackageName = "New Package"
+            };
 
-//            // Act
-//            var result = await _controller.Put(id, request);
+            var expectedResponse = new ServiceResponse<ProductsResponse>(new ProductsResponse(product));
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            _mockService.Setup(service => service.Cadastrar(productCreateRequest))
+                .ReturnsAsync(expectedResponse);
 
-//        [Fact]
-//        public async Task Put_DeveRetornarBadRequestQuandoModelInvalido()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var request = new ProductUpdateRequest { /* mock invalid request */ };
-//            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+            // Act
+            var result = await _controller.Post(productCreateRequest);
 
-//            // Act
-//            var result = await _controller.Put(id, request);
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.IsType<SerializableError>(badRequestResult.Value);
-//        }
+        [Fact]
+        public async Task Post_DeveRetornarBadRequestQuandoModelInvalido()
+        {
+            // Arrange
+            var productCreateRequest = new ProductCreateRequest
+            {
+                // Deixando o ProductName vazio para simular um modelo inválido
+                ProductName = "",
+                SupplierId = 1,
+                UnitPrice = 19.99m,
+                IsDiscontinued = false,
+                PackageName = "New Package"
+            };
 
-//        [Fact]
-//        public async Task Put_DeveRetornarBadRequestQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var request = new ProductUpdateRequest { /* mock request */ };
-//            var response = new ServiceResponse<Product>(
-//                mensagemDeErro: "Erro ao atualizar o produto"
-//            );
+            _controller.ModelState.AddModelError("ProductName", "O nome do produto é obrigatório.");
 
-//            _mockService.Setup(service => service.Editar(id, request))
-//                .ReturnsAsync(response);
+            // Act
+            var result = await _controller.Post(productCreateRequest);
 
-//            // Act
-//            var result = await _controller.Put(id, request);
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.IsType<SerializableError>(badRequestResult.Value);
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.Equal(response.Mensagem, badRequestResult.Value);
-//        }
+            var error = badRequestResult.Value as SerializableError;
+            Assert.True(error.ContainsKey("ProductName"));
+        }
+
+        [Fact]
+        public async Task Put_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            int id = 1;
+
+            var productUpdateRequest = new ProductUpdateRequest
+            {
+                ProductName = "Updated Product",
+                SupplierId = 2,
+                UnitPrice = 29.99m,
+                IsDiscontinued = true,
+                PackageName = "Updated Package"
+            };
+
+            var product = new Product
+            {
+                Id = id,
+                ProductName = "Updated Product",
+                SupplierId = 2,
+                UnitPrice = 29.99m,
+                IsDiscontinued = true,
+                PackageName = "Updated Package"
+            };
+
+            var expectedResponse = new ServiceResponse<ProductsResponse>(new ProductsResponse(product));
+
+            _mockService.Setup(service => service.Editar(id, productUpdateRequest))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var result = await _controller.Put(id, productUpdateRequest);
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
 
 
-//    }
-//}
+        [Fact]
+        public async Task Put_DeveRetornarBadRequestQuandoModelInvalido()
+        {
+            // Arrange
+            int id = 1;
+
+            var productUpdateRequest = new ProductUpdateRequest
+            {
+                // Deixando o ProductName vazio para simular um modelo inválido
+                ProductName = "",
+                SupplierId = 2,
+                UnitPrice = 29.99m,
+                IsDiscontinued = true,
+                PackageName = "Updated Package"
+            };
+
+            _controller.ModelState.AddModelError("ProductName", "O nome do produto é obrigatório.");
+
+            // Act
+            var result = await _controller.Put(id, productUpdateRequest);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.IsType<SerializableError>(badRequestResult.Value);
+
+            var error = badRequestResult.Value as SerializableError;
+            Assert.True(error.ContainsKey("ProductName"));
+        }
+
+
+
+
+    }
+}
 
 
 
