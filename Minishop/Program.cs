@@ -16,14 +16,16 @@ builder.Services.AddScoped<CustomersRepository>();
 builder.Services.AddScoped<OrdersRepository>();
 builder.Services.AddScoped<SuppliersRepository>();
 builder.Services.AddScoped<ProductsRepository>();
-builder.Services.AddScoped<OrderItemsRepository>();
+//builder.Services.AddScoped<OrderItemsRepository>();
 builder.Services.AddScoped<IProductsService, ProductsService>();
 builder.Services.AddScoped<IProductsRepository, ProductsRepository>();
 builder.Services.AddScoped<ICustomersService, CustomersService>();
 builder.Services.AddScoped<ISupplierService, SuppliersService>();
 builder.Services.AddScoped<IOrdersService, OrdersService>();
 builder.Services.AddScoped<ICustomersRepository, CustomersRepository>();
-
+//builder.Services.AddScoped<ICustomersDbContext, Minishop2023Context>();
+builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
+builder.Services.AddScoped<ISuppliersRepository, SuppliersRepository>();
 
 // Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio
 builder.Services.AddTransient<CustomersService>();

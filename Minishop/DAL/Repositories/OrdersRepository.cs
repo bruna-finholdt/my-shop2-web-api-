@@ -4,18 +4,18 @@ using Minishop.Domain.Entity;
 
 namespace Minishop.DAL.Repositories
 {
-    public class OrdersRepository : BaseRepository<CustomerOrder>
+    public class OrdersRepository : BaseRepository<CustomerOrder>, IOrdersRepository
     {
         public OrdersRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
         {
         }
 
-        ///Contagem de pedidos
-        ///<returns>Quantidade de pedidos</returns>
-        public async Task<int> ContagemPedidos()
-        {
-            return await _minishop2023Context.OrderItems.Select(x => x.OrderId).Distinct().CountAsync();
-        }
+        /////Contagem de pedidos
+        /////<returns>Quantidade de pedidos</returns>
+        //public async Task<int> ContagemPedidos()
+        //{
+        //    return await _minishop2023Context.OrderItems.Select(x => x.OrderId).Distinct().CountAsync();
+        //}
 
         public async Task<List<CustomerOrder>> Pesquisar(int paginaAtual, int qtdPagina)
         {
@@ -29,16 +29,6 @@ namespace Minishop.DAL.Repositories
                 .Take(qtdPagina)
                 .ToListAsync();
         }
-
-        //public async Task<List<CustomerOrder>> PesquisarCustomerId(int customerId)
-        //{
-        //    return await _minishop2023Context
-        //            .Set<CustomerOrder>()
-        //            .Include(x => x.Customer)
-        //            .Include(x => x.OrderItems)
-        //            .Where(x => x.CustomerId == customerId)
-        //            .ToListAsync();
-        //}
 
         public override async Task<CustomerOrder> PesquisaPorId(int id)
         {

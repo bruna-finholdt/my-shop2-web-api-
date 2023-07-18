@@ -7,18 +7,16 @@ namespace Minishop.Services
     public class OrdersService : IOrdersService
     {
         //usando o CustomersRepository via injeção de dependência:
-        private readonly OrdersRepository _ordersRepository;
-        private readonly OrderItemsRepository _orderItemsRepository;
+        private readonly IOrdersRepository _ordersRepository;
 
-        public OrdersService(OrdersRepository ordersRepository, OrderItemsRepository orderItemsRepository)
+        public OrdersService(IOrdersRepository ordersRepository)
         {
             _ordersRepository = ordersRepository;
-            _orderItemsRepository = orderItemsRepository;
         }
 
         public async Task<int> Contar()
         {
-            int quantidade = await _ordersRepository.ContagemPedidos();
+            int quantidade = await _ordersRepository.Contagem();
 
             return quantidade;
         }
@@ -62,9 +60,6 @@ namespace Minishop.Services
                     "Pedido não encontrado"
                 );
             }
-
-
-            //var orderItems = await _orderItemsRepository.PesquisarCustomerOrderId(id);
 
 
             return new ServiceResponse<CustomerOrderCompletoResponse>(

@@ -12,6 +12,8 @@ namespace Minishop.DAL.Repositories
         Task<List<Product>> Pesquisar(int paginaAtual, int qtdPagina);
         //Task<List<Product>> PesquisarSupplierId(int supplierId);
         Task<Product> PesquisaPorId(int id);
+        Task<bool> VerificarFornecedorExistente(int id);
+
     }
 }
 

@@ -1,150 +1,186 @@
-﻿//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.Mvc;
-//using Minishop.Controllers;
-//using Minishop.Domain.DTO;
-//using Minishop.Domain.Entity;
-//using Minishop.Services;
-//using Minishop.Services.Base;
-//using Moq;
-//using Xunit;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Minishop.Controllers;
+using Minishop.Domain.DTO;
+using Minishop.Domain.Entity;
+using Minishop.Services;
+using Minishop.Services.Base;
+using Moq;
+using Xunit;
 
-//namespace Minishop.Tests.Controllers
-//{
-//    public class OrdersControllerTests
-//    {
-//        private readonly Mock<IOrdersService> _mockService;
-//        private readonly OrdersController _controller;
+namespace Minishop.Tests.Controllers
+{
+    public class OrdersControllerTests
+    {
+        private readonly Mock<IOrdersService> _mockService;
+        private readonly OrdersController _controller;
 
-//        public OrdersControllerTests()
-//        {
-//            _mockService = new Mock<IOrdersService>();
-//            _controller = new OrdersController(_mockService.Object);
-//        }
+        public OrdersControllerTests()
+        {
+            _mockService = new Mock<IOrdersService>();
+            _controller = new OrdersController(_mockService.Object);
+        }
 
-//        [Fact]
-//        public async Task ObterContagem_DeveRetornarOk()
-//        {
-//            // Arrange
-//            var response = new ItemCountResponse
-//            {
-//                ItemCount = 10
-//            };
+        [Fact]
+        public async Task ObterContagem_DeveRetornarOk()
+        {
+            // Arrange
+            var expectedCount = 50;
 
-//            _mockService.Setup(service => service.Contar())
-//                .ReturnsAsync(response.ItemCount);
+            _mockService.Setup(service => service.Contar())
+                .ReturnsAsync(expectedCount);
 
-//            // Act
-//            var result = await _controller.ObterContagem();
+            // Act
+            var result = await _controller.ObterContagem();
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result.Result);
-//            var okResult = result.Result as OkObjectResult;
-//            var actualResponse = okResult.Value as ItemCountResponse;
-//            Assert.Equal(10, actualResponse.ItemCount);
-//        }
+            // Assert
+            Assert.IsType<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            var response = (ItemCountResponse)okResult.Value; // Convert to ItemCountResponse
 
-//        [Fact]
-//        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            var queryRequest = new PageQueryRequest
-//            {
-//                PaginaAtual = 1,
-//                Quantidade = 10
-//            };
-//            var response = new ServicePagedResponse<CustomerOrderResponse>(
-//                new CustomerOrderResponse[] { /* mock response */ },
-//                10,
-//                1,
-//                10
-//            );
+            Assert.Equal(expectedCount, response.ItemCount);
+        }
 
-//            _mockService.Setup(service => service.Pesquisar(queryRequest))
-//                .ReturnsAsync(response);
+        [Fact]
+        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            var queryRequest = new PageQueryRequest
+            {
+                PaginaAtual = 1,
+                Quantidade = 10
+            };
 
-//            // Act
-//            var result = await _controller.Get(queryRequest);
+            var customerOrders = new List<CustomerOrderResponse>
+        {
+            new CustomerOrderResponse(new CustomerOrder
+            {
+                Id = 1,
+                OrderDate = new DateTime(2023, 7, 1),
+                TotalAmount = 35.97m,
+                Customer = new Customer
+                {
+                    Id = 1,
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@example.com"
+                },
+                OrderItems = new List<OrderItem>
+                {
+                    new OrderItem { Id = 1, OrderId = 1, ProductId = 1, Quantity = 2, UnitPrice = 10.99m },
+                    new OrderItem { Id = 2, OrderId = 1, ProductId = 2, Quantity = 3, UnitPrice = 5.99m }
+                }
+            }),
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response, okResult.Value);
-//        }
+            new CustomerOrderResponse(new CustomerOrder
+            {
+                Id = 2,
+                OrderDate = new DateTime(2023, 7, 2),
+                TotalAmount = 22.98m,
+                Customer = new Customer
+                {
+                    Id = 2,
+                    FirstName = "Jane",
+                    LastName = "Smith",
+                    Email = "jane.smith@example.com"
+                },
+                OrderItems = new List<OrderItem>
+                {
+                    new OrderItem { Id = 3, OrderId = 2, ProductId = 3, Quantity = 1, UnitPrice = 22.98m }
+                }
+            })
+        };
 
-//        [Fact]
-//        public async Task Get_DeveRetornarBadRequestQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            var queryRequest = new PageQueryRequest
-//            {
-//                PaginaAtual = 1,
-//                Quantidade = 10
-//            };
-//            var response = new ServicePagedResponse<CustomerOrderResponse>(
-//                mensagemDeErro: "Erro na pesquisa"
-//            );
+            var response = new ServicePagedResponse<CustomerOrderResponse>(
+                customerOrders,
+                15,
+                1,
+                10
+            );
 
-//            _mockService.Setup(service => service.Pesquisar(queryRequest))
-//                .ReturnsAsync(response);
+            _mockService.Setup(service => service.Pesquisar(queryRequest))
+                .ReturnsAsync(response);
 
-//            // Act
-//            var result = await _controller.Get(queryRequest);
+            // Act
+            var result = await _controller.Get(queryRequest);
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.Equal(response, badRequestResult.Value);
-//        }
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var customerOrder = new CustomerOrder
-//            {
-//                Id = 1,
-//                OrderDate = DateTime.UtcNow,
-//                TotalAmount = 100,
-//                Customer = new Customer { Id = 1 },
-//                OrderItems = new List<OrderItem> { /* mock order items */ }
-//            };
-//            var response = new ServiceResponse<CustomerOrderCompletoResponse>(
-//                new CustomerOrderCompletoResponse(customerOrder)
-//            );
+            var resultValue = okResult.Value as ServicePagedResponse<CustomerOrderResponse>;
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            Assert.Equal(response.Conteudo, resultValue.Conteudo);
+            Assert.Equal(response.PaginaAtual, resultValue.PaginaAtual);
+            Assert.Equal(response.TotalPaginas, resultValue.TotalPaginas);
+        }
 
-//            // Act
-//            var result = await _controller.GetById(id.ToString());
+        [Fact]
+        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            int id = 1;
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            var customerOrder = new CustomerOrder
+            {
+                Id = 1,
+                OrderDate = new DateTime(2023, 7, 1),
+                TotalAmount = 35.97m,
+                Customer = new Customer
+                {
+                    Id = 1,
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "john.doe@example.com"
+                },
+                OrderItems = new List<OrderItem>
+            {
+                new OrderItem { Id = 1, OrderId = 1, ProductId = 1, Quantity = 2, UnitPrice = 10.99m },
+                new OrderItem { Id = 2, OrderId = 1, ProductId = 2, Quantity = 3, UnitPrice = 5.99m }
+            }
+            };
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarNotFoundQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var response = new ServiceResponse<CustomerOrderCompletoResponse>(
-//                mensagemDeErro: "Pedido não encontrado"
-//            );
+            var expectedResponse = new ServiceResponse<CustomerOrderCompletoResponse>(
+                new CustomerOrderCompletoResponse(customerOrder)
+            );
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(expectedResponse);
 
-//            // Act
-//            var result = await _controller.GetById(id.ToString());
+            // Act
+            var result = await _controller.GetById(id.ToString());
 
-//            // Assert
-//            Assert.IsType<NotFoundObjectResult>(result);
-//            var notFoundResult = result as NotFoundObjectResult;
-//            Assert.Equal(response, notFoundResult.Value);
-//        }
-//    }
-//}
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
+
+        [Fact]
+        public async Task GetById_DeveRetornarNotFoundQuandoIdNaoForEncontrado()
+        {
+            // Arrange
+            int id = 1;
+
+            var expectedResponse = new ServiceResponse<CustomerOrderCompletoResponse>(
+                "Pedido não encontrado"
+            );
+
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var result = await _controller.GetById(id.ToString());
+
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var response = Assert.IsType<ServiceResponse<CustomerOrderCompletoResponse>>(notFoundResult.Value);
+
+            Assert.False(response.Sucesso);
+            Assert.Equal("Pedido não encontrado", response.Mensagem);
+        }
+
+
+    }
+}
 

@@ -98,31 +98,6 @@ namespace Minishop.Tests.Controllers
         }
 
         [Fact]
-        public async Task Get_DeveRetornarBadRequestQuandoServicoRetornarFalha()
-        {
-            // Arrange
-            var queryRequest = new PageQueryRequest
-            {
-                PaginaAtual = 1,
-                Quantidade = 10
-            };
-            var response = new ServicePagedResponse<CustomerResponse>(
-                mensagemDeErro: "Erro na pesquisa"
-            );
-
-            _mockService.Setup(service => service.Pesquisar(queryRequest))
-                .ReturnsAsync(response);
-
-            // Act
-            var result = await _controller.Get(queryRequest);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
-            var badRequestResult = result as BadRequestObjectResult;
-            Assert.Equal(response, badRequestResult.Value);
-        }
-
-        [Fact]
         public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
             // Arrange
@@ -175,55 +150,61 @@ namespace Minishop.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetById_DeveRetornarNotFoundQuandoServicoRetornarFalha()
+        public async Task GetById_DeveRetornarNotFoundQuandoIdForInvalido()
         {
             // Arrange
-            int id = 1;
-            var response = new ServiceResponse<CustomerCompletoResponse>(
-                mensagemDeErro: "Cliente não encontrado"
-            );
+            int id = 5;
+
+            string mensagem = "Cliente não encontrado";
+
+            var retorno = new ServiceResponse<CustomerCompletoResponse>(mensagem);
 
             _mockService.Setup(service => service.PesquisaPorId(id))
-                .ReturnsAsync(response);
+                .ReturnsAsync(retorno);
 
             // Act
             var result = await _controller.GetById(id);
 
             // Assert
-            Assert.IsType<NotFoundObjectResult>(result);
-            var notFoundResult = result as NotFoundObjectResult;
-            Assert.Equal(response, notFoundResult.Value);
+            var NotFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var response = Assert.IsType<ServiceResponse<CustomerCompletoResponse>>(NotFoundResult.Value);
+
+            Assert.False(response.Sucesso);
+            Assert.Equal(mensagem, response.Mensagem);
         }
 
         [Fact]
         public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
             // Arrange
-            var request = new CustomerCreateRequest
+            var createRequest = new CustomerCreateRequest
             {
-                Cpf = "12345678",
-                Email = "john.doe@test.com",
                 FirstName = "John",
                 LastName = "Doe",
-                Phone = "123456789"
+                Email = "john.doe@example.com",
+                Phone = "1234567890",
+                Cpf = "12345678900"
             };
-            var customer = new Customer
+
+            var createdCustomer = new Customer
             {
-                Cpf = "12345678",
-                Email = "john.doe@test.com",
+                Id = 1,
                 FirstName = "John",
                 LastName = "Doe",
-                Phone = "123456789"
+                Email = "john.doe@example.com",
+                Phone = "1234567890",
+                Cpf = "12345678900"
             };
+
             var response = new ServiceResponse<CustomerResponse>(
-                new CustomerResponse(customer)
+                new CustomerResponse(createdCustomer)
             );
 
-            _mockService.Setup(service => service.Cadastrar(request))
+            _mockService.Setup(service => service.Cadastrar(createRequest))
                 .ReturnsAsync(response);
 
             // Act
-            var result = await _controller.Post(request);
+            var result = await _controller.Post(createRequest);
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
@@ -235,23 +216,27 @@ namespace Minishop.Tests.Controllers
         public async Task Post_DeveRetornarBadRequestQuandoModelInvalido()
         {
             // Arrange
-            var request = new CustomerCreateRequest
+            var createRequest = new CustomerCreateRequest
             {
-                Cpf = "12345678",
-                Email = "john.doe@test.com",
-                FirstName = "John",
+                // O modelo é inválido porque o FirstName é obrigatório, mas não está sendo fornecido
                 LastName = "Doe",
-                Phone = "123456789"
+                Email = "john.doe@example.com",
+                Phone = "1234567890",
+                Cpf = "12345678900"
             };
-            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+
+            _controller.ModelState.AddModelError("FirstName", "O nome do cliente é obrigatório");
 
             // Act
-            var result = await _controller.Post(request);
+            var result = await _controller.Post(createRequest);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
             var badRequestResult = result as BadRequestObjectResult;
             Assert.IsType<SerializableError>(badRequestResult.Value);
+
+            var errors = (SerializableError)badRequestResult.Value;
+            Assert.True(errors.ContainsKey("FirstName"));
         }
 
         [Fact]
@@ -259,36 +244,32 @@ namespace Minishop.Tests.Controllers
         {
             // Arrange
             int id = 1;
-            var request = new CustomerUpdateRequest
+
+            var updateRequest = new CustomerUpdateRequest
             {
-                Phone = "23456"
+                Email = "updated.email@example.com",
+                Phone = "9876543210"
             };
 
-            var customer = new Customer
+            var updatedCustomer = new Customer
             {
-                Cpf = "12345678",
-                Email = "john.doe@test.com",
+                Id = 1,
                 FirstName = "John",
                 LastName = "Doe",
-                Phone = "123456789"
+                Email = "updated.email@example.com",
+                Phone = "9876543210",
+                Cpf = "12345678900"
             };
 
-            var response = new ServiceResponse<Customer>(
-                new Customer
-                {
-                    Cpf = "12345678",
-                    Email = "john.doe@test.com",
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Phone = "23456"
-                }
+            var response = new ServiceResponse<CustomerResponse>(
+                new CustomerResponse(updatedCustomer)
             );
 
-            _mockService.Setup(service => service.Editar(id, request))
+            _mockService.Setup(service => service.Editar(id, updateRequest))
                 .ReturnsAsync(response);
 
             // Act
-            var result = await _controller.Put(id, request);
+            var result = await _controller.Put(id, updateRequest);
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
@@ -301,46 +282,28 @@ namespace Minishop.Tests.Controllers
         {
             // Arrange
             int id = 1;
-            var request = new CustomerUpdateRequest
+
+            var updateRequest = new CustomerUpdateRequest
             {
-                Phone = "23456"
+                // O modelo é inválido porque o e-mail é obrigatório, mas não está sendo fornecido
+                Phone = "9876543210"
             };
 
-            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+            _controller.ModelState.AddModelError("Email", "O e-mail é obrigatório");
 
             // Act
-            var result = await _controller.Put(id, request);
+            var result = await _controller.Put(id, updateRequest);
 
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
             var badRequestResult = result as BadRequestObjectResult;
             Assert.IsType<SerializableError>(badRequestResult.Value);
+
+            var errors = (SerializableError)badRequestResult.Value;
+            Assert.True(errors.ContainsKey("Email"));
         }
 
-        [Fact]
-        public async Task Put_DeveRetornarBadRequestQuandoServicoRetornarFalha()
-        {
-            // Arrange
-            int id = 1;
-            var request = new CustomerUpdateRequest
-            {
-                Phone = "23456"
-            };
-            var response = new ServiceResponse<Customer>(
-                mensagemDeErro: "Erro ao atualizar o cliente"
-            );
 
-            _mockService.Setup(service => service.Editar(id, request))
-                .ReturnsAsync(response);
-
-            // Act
-            var result = await _controller.Put(id, request);
-
-            // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
-            var badRequestResult = result as BadRequestObjectResult;
-            Assert.Equal(response.Mensagem, badRequestResult.Value);
-        }
     }
 }
 

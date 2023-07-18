@@ -6,13 +6,16 @@ namespace Minishop.Domain.DTO
     {
         public SuppliersResponse(Supplier supplier)
         {
-            Id = supplier.Id;
-            CompanyName = supplier.CompanyName;
-            ContactName = supplier.ContactName;
-            Phone = supplier.Phone;
-            City = supplier.City;
-            Uf = supplier.Uf;
-            Email = supplier.Email;
+            if (supplier != null)
+            {
+                Id = supplier.Id;
+                CompanyName = supplier.CompanyName;
+                ContactName = supplier.ContactName;
+                Phone = supplier.Phone;
+                City = supplier.City;
+                Uf = supplier.Uf;
+                Email = supplier.Email;
+            }
         }
         public int Id { get; private set; }
         public string CompanyName { get; private set; }

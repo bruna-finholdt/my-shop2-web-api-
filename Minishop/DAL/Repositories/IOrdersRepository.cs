@@ -6,6 +6,6 @@ namespace Minishop.DAL.Repositories
     public interface IOrdersRepository : IBaseRepository<CustomerOrder>
     {
         Task<List<CustomerOrder>> Pesquisar(int paginaAtual, int qtdPagina);
-        Task<CustomerOrder> PesquisarPorId(int id);
+        Task<CustomerOrder> PesquisaPorId(int id);
     }
 }

@@ -10,16 +10,6 @@ namespace Minishop.Domain.DTO
         {
             OrderItems = customerOrder.OrderItems.Select(orderItem => new OrderItemResponse(orderItem)).ToList();
 
-            //OrderItems = new List<OrderItemResponse>();
-
-            //foreach (OrderItem orderItem in orderItems)
-            //{
-
-            //    //var itemResponse = new OrderItemResponse(orderItem);
-            //    //OrderItems.Add(itemResponse);
-            //    OrderItems.Add(new OrderItemResponse(orderItem));
-            //}
-
         }
 
 

@@ -1,201 +1,273 @@
-﻿//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.Mvc;
-//using Minishop.Controllers;
-//using Minishop.Domain.DTO;
-//using Minishop.Domain.Entity;
-//using Minishop.Services;
-//using Minishop.Services.Base;
-//using Moq;
-//using Xunit;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Minishop.Controllers;
+using Minishop.Domain.DTO;
+using Minishop.Domain.Entity;
+using Minishop.Services;
+using Minishop.Services.Base;
+using Moq;
+using Xunit;
 
-//namespace Minishop.Tests.Controllers
-//{
-//    public class SupplierControllerTests
-//    {
-//        private readonly Mock<ISupplierService> _mockService;
-//        private readonly SuppliersController _controller;
+namespace Minishop.Tests.Controllers
+{
+    public class SupplierControllerTests
+    {
+        private readonly Mock<ISupplierService> _mockService;
+        private readonly SuppliersController _controller;
 
-//        public SupplierControllerTests()
-//        {
-//            _mockService = new Mock<ISupplierService>();
-//            _controller = new SuppliersController(_mockService.Object);
-//        }
+        public SupplierControllerTests()
+        {
+            _mockService = new Mock<ISupplierService>();
+            _controller = new SuppliersController(_mockService.Object);
+        }
 
-//        [Fact]
-//        public async Task ObterContagem_DeveRetornarOk()
-//        {
-//            // Arrange
-//            var response = 10;
-//            _mockService.Setup(service => service.Contar())
-//                .ReturnsAsync(response);
+        [Fact]
+        public async Task ObterContagem_DeveRetornarOk()
+        {
+            // Arrange
+            var expectedCount = 15;
 
-//            // Act
-//            var result = await _controller.ObterContagem();
+            _mockService.Setup(service => service.Contar())
+                .ReturnsAsync(expectedCount);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result.Result);
-//            var okResult = result.Result as OkObjectResult;
-//            var itemCountResponse = okResult.Value as ItemCountResponse;
-//            Assert.Equal(response, itemCountResponse.ItemCount);
-//        }
+            // Act
+            var result = await _controller.ObterContagem();
 
-//        [Fact]
-//        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            var queryRequest = new PageQueryRequest
-//            {
-//                PaginaAtual = 1,
-//                Quantidade = 10
-//            };
-//            var response = new ServicePagedResponse<SuppliersResponse>(
-//                new SuppliersResponse[] { /* mock response */ },
-//                10,
-//                1,
-//                10
-//            );
+            // Assert
+            Assert.IsType<OkObjectResult>(result.Result);
+            var okResult = result.Result as OkObjectResult;
+            var response = (ItemCountResponse)okResult.Value; // Convert to ItemCountResponse
 
-//            _mockService.Setup(service => service.Pesquisar(queryRequest))
-//                .ReturnsAsync(response);
+            Assert.Equal(expectedCount, response.ItemCount);
+        }
 
-//            // Act
-//            var result = await _controller.Get(queryRequest);
+        [Fact]
+        public async Task Get_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            var queryRequest = new PageQueryRequest
+            {
+                PaginaAtual = 1,
+                Quantidade = 10
+            };
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response, okResult.Value);
-//        }
+            var suppliers = new List<SuppliersResponse>
+            {
+                new SuppliersResponse(new Supplier
+                {
+                    Id = 1,
+                    CompanyName = "Supplier 1",
+                    City = "Uberaba",
+                    Uf = "MG",
+                    Cnpj = "123456789",
+                    Email = "sup1@gmail.com"
+                }),
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var supplier = new Supplier
-//            {
-//                Id = 1,
-//                CompanyName = "Test",
-//                ContactName = "Test",
-//                Phone = "Test",
-//                City = "Test",
-//                Uf = "Test",
-//                Email = "Test"
-//            };
-//            var response = new ServiceResponse<SuppliersCompletoResponse>(
-//                new SuppliersCompletoResponse(supplier)
-//            );
+                new SuppliersResponse(new Supplier
+                {
+                    Id = 2,
+                    CompanyName = "Supplier 2",
+                    City = "Uberaba",
+                    Uf = "MG",
+                    Cnpj = "789456123",
+                    Email = "sup2@gmail.com"
+                }),
+            };
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            var response = new ServicePagedResponse<SuppliersResponse>(
+                suppliers,
+                10,
+                1,
+                10
+            );
 
-//            // Act
-//            var result = await _controller.GetById(id);
+            _mockService.Setup(service => service.Pesquisar(queryRequest))
+                .ReturnsAsync(response);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            // Act
+            var result = await _controller.Get(queryRequest);
 
-//        [Fact]
-//        public async Task GetById_DeveRetornarNotFoundQuandoServicoRetornarFalha()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var response = new ServiceResponse<SuppliersCompletoResponse>(
-//                mensagemDeErro: "Fornecedor não encontrado"
-//            );
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
 
-//            _mockService.Setup(service => service.PesquisaPorId(id))
-//                .ReturnsAsync(response);
+            var resultValue = okResult.Value as ServicePagedResponse<SuppliersResponse>;
 
-//            // Act
-//            var result = await _controller.GetById(id);
+            Assert.Equal(response.Conteudo, resultValue.Conteudo);
+            Assert.Equal(response.PaginaAtual, resultValue.PaginaAtual);
+            Assert.Equal(response.TotalPaginas, resultValue.TotalPaginas);
+        }
 
-//            // Assert
-//            Assert.IsType<NotFoundObjectResult>(result);
-//            var notFoundResult = result as NotFoundObjectResult;
-//            Assert.Equal(response, notFoundResult.Value);
-//        }
+        [Fact]
+        public async Task GetById_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            int id = 1;
 
-//        [Fact]
-//        public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            var request = new SupplierCreateRequest { /* mock request */ };
-//            var supplier = new Supplier { /* mock supplier */ };
-//            var response = new ServiceResponse<SuppliersResponse>(
-//                new SuppliersResponse(supplier)
-//            );
+            var supplier = new Supplier
+            {
+                Id = id,
+                CompanyName = "Supplier 1",
+                City = "Uberaba",
+                Uf = "MG",
+                Cnpj = "123456789",
+                Email = "sup1@gmail.com"
+            };
 
-//            _mockService.Setup(service => service.Cadastrar(request))
-//                .ReturnsAsync(response);
+            var expectedResponse = new ServiceResponse<SuppliersCompletoResponse>(new SuppliersCompletoResponse(supplier));
 
-//            // Act
-//            var result = await _controller.Post(request);
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(expectedResponse);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            // Act
+            var result = await _controller.GetById(id);
 
-//        [Fact]
-//        public async Task Post_DeveRetornarBadRequestQuandoModelInvalido()
-//        {
-//            // Arrange
-//            var request = new SupplierCreateRequest { /* mock invalid request */ };
-//            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
 
-//            // Act
-//            var result = await _controller.Post(request);
+        [Fact]
+        public async Task GetById_DeveRetornarNotFoundQuandoIdForInvalido()
+        {
+            // Arrange
+            int id = 5;
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.IsType<SerializableError>(badRequestResult.Value);
-//        }
+            string mensagem = "Fornecedor não encontrado";
 
-//        [Fact]
-//        public async Task Put_DeveRetornarOkQuandoServicoRetornarSucesso()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var request = new SupplierUpdateRequest { /* mock request */ };
-//            var supplier = new Supplier { /* mock supplier */ };
-//            var response = new ServiceResponse<Supplier>(
-//                new Supplier(/* mock response */)
-//            );
+            var retorno = new ServiceResponse<SuppliersCompletoResponse>(mensagem);
 
-//            _mockService.Setup(service => service.Editar(id, request))
-//                .ReturnsAsync(response);
+            _mockService.Setup(service => service.PesquisaPorId(id))
+                .ReturnsAsync(retorno);
 
-//            // Act
-//            var result = await _controller.Put(id, request);
+            // Act
+            var result = await _controller.GetById(id);
 
-//            // Assert
-//            Assert.IsType<OkObjectResult>(result);
-//            var okResult = result as OkObjectResult;
-//            Assert.Equal(response.Conteudo, okResult.Value);
-//        }
+            // Assert
+            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+            var response = Assert.IsType<ServiceResponse<SuppliersCompletoResponse>>(notFoundResult.Value);
 
-//        [Fact]
-//        public async Task Put_DeveRetornarBadRequestQuandoModelInvalido()
-//        {
-//            // Arrange
-//            int id = 1;
-//            var request = new SupplierUpdateRequest { /* mock invalid request */ };
-//            _controller.ModelState.AddModelError("PropertyName", "Erro de validação");
+            Assert.False(response.Sucesso);
+            Assert.Equal(mensagem, response.Mensagem);
+        }
 
-//            // Act
-//            var result = await _controller.Put(id, request);
+        [Fact]
+        public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            var supplierCreateRequest = new SupplierCreateRequest
+            {
+                CompanyName = "New Supplier",
+                Cnpj = "987654321",
+                Email = "new.supplier@example.com",
+                City = "New City",
+                Uf = "SP",
+                Phone = "1234567890",
+                ContactName = "Contact Person"
+            };
 
-//            // Assert
-//            Assert.IsType<BadRequestObjectResult>(result);
-//            var badRequestResult = result as BadRequestObjectResult;
-//            Assert.IsType<SerializableError>(badRequestResult.Value);
-//        }
-//    }
-//}
+            var supplier = new Supplier
+            {
+                Id = 1,
+                CompanyName = "New Supplier",
+                Cnpj = "987654321",
+                Email = "new.supplier@example.com",
+                City = "New City",
+                Uf = "SP",
+                Phone = "1234567890",
+                ContactName = "Contact Person"
+            };
+
+            var expectedResponse = new ServiceResponse<SuppliersResponse>(new SuppliersResponse(supplier));
+
+            _mockService.Setup(service => service.Cadastrar(supplierCreateRequest))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var result = await _controller.Post(supplierCreateRequest);
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
+
+        [Fact]
+        public async Task Post_DeveRetornarBadRequestQuandoModelInvalido()
+        {
+            // Arrange
+            var supplierCreateRequest = new SupplierCreateRequest();
+
+            _controller.ModelState.AddModelError("CompanyName", "O nome do fornecedor é obrigatório.");
+
+            // Act
+            var result = await _controller.Post(supplierCreateRequest);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.IsType<SerializableError>(badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Put_DeveRetornarOkQuandoServicoRetornarSucesso()
+        {
+            // Arrange
+            int id = 1;
+            var supplierUpdateRequest = new SupplierUpdateRequest
+            {
+                Email = "updated.supplier@example.com",
+                City = "Updated City",
+                Uf = "SP",
+                Phone = "0987654321",
+                ContactName = "Updated Contact Person"
+            };
+
+            var supplier = new Supplier
+            {
+                Id = id,
+                CompanyName = "Updated Supplier",
+                Cnpj = "987654321",
+                Email = "updated.supplier@example.com",
+                City = "Updated City",
+                Uf = "SP",
+                Phone = "0987654321",
+                ContactName = "Updated Contact Person"
+            };
+
+            var expectedResponse = new ServiceResponse<SuppliersResponse>(new SuppliersResponse(supplier));
+
+            _mockService.Setup(service => service.Editar(id, supplierUpdateRequest))
+                .ReturnsAsync(expectedResponse);
+
+            // Act
+            var result = await _controller.Put(id, supplierUpdateRequest);
+
+            // Assert
+            Assert.IsType<OkObjectResult>(result);
+            var okResult = result as OkObjectResult;
+            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+        }
+
+        [Fact]
+        public async Task Put_DeveRetornarBadRequestQuandoModelInvalido()
+        {
+            // Arrange
+            int id = 1;
+            var supplierUpdateRequest = new SupplierUpdateRequest();
+
+            _controller.ModelState.AddModelError("Email", "O e-mail do fornecedor é obrigatório.");
+
+            // Act
+            var result = await _controller.Put(id, supplierUpdateRequest);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+            var badRequestResult = result as BadRequestObjectResult;
+            Assert.IsType<SerializableError>(badRequestResult.Value);
+        }
+
+    }
+}
 

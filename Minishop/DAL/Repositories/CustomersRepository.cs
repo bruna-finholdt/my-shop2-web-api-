@@ -31,5 +31,21 @@ namespace Minishop.DAL.Repositories
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> VerificarCpfExistente(string cpf)
+        {
+            return await _minishop2023Context.Customers.AnyAsync(x => x.Cpf == cpf);
+        }
+
+        public async Task<bool> VerificarEmailExistente(string email)
+        {
+            return await _minishop2023Context.Customers.AnyAsync(x => x.Email == email);
+        }
+
+        public async Task<bool> VerificarNovoEmailExistente(string email, int id)
+        {
+            // Verificar se o e-mail já está em uso por outro cliente (exceto o cliente com o ID fornecido)
+            return await _minishop2023Context.Customers.AnyAsync(c => c.Email == email && c.Id != id);
+        }
     }
 }
