@@ -6,6 +6,7 @@ namespace Minishop.Domain.Entity;
 
 public partial class Product
 {
+    [Key]
     /// <summary>
     /// Chave primária (identificador) de cada registro da tabela
     /// </summary>

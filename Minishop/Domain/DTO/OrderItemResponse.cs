@@ -7,16 +7,24 @@ namespace Minishop.Domain.DTO
         public OrderItemResponse(OrderItem orderItem)
         {
             Id = orderItem.Id;
-            ProductName = orderItem.Product?.ProductName;
+            OrderId = orderItem.OrderId;
+            ProductId = orderItem.ProductId;
             Quantity = orderItem.Quantity;
             UnitPrice = orderItem.UnitPrice;
-            TotalAmountItem = orderItem.UnitPrice * orderItem.Quantity;
+            //Product = orderItem.Product;
+            //CustomerOrder = orderItem.
+
         }
 
         public int Id { get; private set; }
-        public string ProductName { get; private set; }
+
+        public int OrderId { get; private set; }
+
+        public int ProductId { get; private set; }
         public int Quantity { get; private set; }
         public decimal UnitPrice { get; private set; }
-        public decimal TotalAmountItem { get; private set; }
+
+        //public Product Product { get; private set; }
+        //public CustomerOrder CustomerOrder { get; private set; }
     }
 }

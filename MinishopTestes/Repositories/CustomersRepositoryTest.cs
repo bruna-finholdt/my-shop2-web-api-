@@ -26,6 +26,7 @@ namespace Minishop.Tests.Repositories
                 .Options;
 
             _dbContext = new Minishop2023Context(dbContextOptions);
+            _dbContext.Database.EnsureDeleted(); // Clear the database before each test
             _customerRepository = new CustomersRepository(_dbContext);
         }
 
