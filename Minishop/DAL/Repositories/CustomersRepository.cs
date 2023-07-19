@@ -21,7 +21,7 @@ namespace Minishop.DAL.Repositories
                 .ToListAsync();
         }
 
-        public override async Task<Customer> PesquisaPorId(int id)
+        public override async Task<Customer?> PesquisaPorId(int id)
         {
             // select top 1 * from T where id = :id
             return await _minishop2023Context

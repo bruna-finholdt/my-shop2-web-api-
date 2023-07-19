@@ -52,16 +52,16 @@ namespace Minishop.Tests.Services
 
             var customers = new List<Customer>
             {
-                new Customer { Id = 1, FirstName = "John", LastName = "Doe", Email = "john.doe@example.com", Phone = "1234567890", Cpf = "99988877766" },
-                new Customer { Id = 2, FirstName = "Jane", LastName = "Smith", Email = "jane.smith@example.com", Phone = "9876543210", Cpf = "88877766655" },
-                new Customer { Id = 3, FirstName = "Michael", LastName = "Johnson", Email = "michael.johnson@example.com", Phone = "5551234567", Cpf = "77766655544" },
-                new Customer { Id = 4, FirstName = "Emily", LastName = "Brown", Email = "emily.brown@example.com", Phone = "4449876543", Cpf = "66655544433" },
-                new Customer { Id = 5, FirstName = "Daniel", LastName = "Williams", Email = "daniel.williams@example.com", Phone = "1117894562", Cpf = "55544433322" },
-                new Customer { Id = 6, FirstName = "Olivia", LastName = "Johnson", Email = "olivia.johnson@example.com", Phone = "2226549871", Cpf = "44433322211" },
+                new Customer { Id = 1, FirstName = "John", LastName = "Doe", Email = "john.doe@example.com", Phone = "1234567890" },
+                new Customer { Id = 2, FirstName = "Jane", LastName = "Smith", Email = "jane.smith@example.com", Phone = "9876543210" },
+                new Customer { Id = 3, FirstName = "Michael", LastName = "Johnson", Email = "michael.johnson@example.com", Phone = "5551234567" },
+                new Customer { Id = 4, FirstName = "Emily", LastName = "Brown", Email = "emily.brown@example.com", Phone = "4449876543" },
+                new Customer { Id = 5, FirstName = "Daniel", LastName = "Williams", Email = "daniel.williams@example.com", Phone = "1117894562" },
+                new Customer { Id = 6, FirstName = "Olivia", LastName = "Johnson", Email = "olivia.johnson@example.com", Phone = "2226549871" },
                 new Customer { Id = 7, FirstName = "James", LastName = "Miller", Email = "james.miller@example.com", Phone = "7776543219", Cpf = "33322211100" },
-                new Customer { Id = 8, FirstName = "Sophia", LastName = "Davis", Email = "sophia.davis@example.com", Phone = "8889876545", Cpf = "22211100099" },
+                new Customer { Id = 8, FirstName = "Sophia", LastName = "Davis", Email = "sophia.davis@example.com", Phone = "8889876545" },
                 new Customer { Id = 9, FirstName = "Liam", LastName = "Wilson", Email = "liam.wilson@example.com", Phone = "9994561238", Cpf = "11100099988" },
-                new Customer { Id = 10, FirstName = "Isabella", LastName = "Anderson", Email = "isabella.anderson@example.com", Phone = "4447894563", Cpf = "00099988877" },
+                new Customer { Id = 10, FirstName = "Isabella", LastName = "Anderson", Email = "isabella.anderson@example.com", Phone = "4447894563" },
             };
 
             _mockRepository.Setup(repository => repository.Pesquisar(1, 10)).ReturnsAsync(customers);
@@ -71,6 +71,15 @@ namespace Minishop.Tests.Services
             Assert.NotNull(result);
             var customersResponse = result.Conteudo.ToList();
             Assert.Equal(queryRequest.Quantidade, customersResponse.Count);
+            // Compare the customers list returned by the service with the expected customers list
+            Assert.Collection(customersResponse, customers.Select(c => new Action<CustomerResponse>(cr =>
+            {
+                Assert.Equal(c.Id, cr.Id);
+                Assert.Equal(c.FirstName, cr.FirstName);
+                Assert.Equal(c.LastName, cr.LastName);
+                Assert.Equal(c.Email, cr.Email);
+                Assert.Equal(c.Phone, cr.Phone);
+            })).ToArray());
         }
 
         [Fact]

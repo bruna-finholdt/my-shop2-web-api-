@@ -10,12 +10,6 @@ namespace Minishop.DAL.Repositories
         {
         }
 
-        /////Contagem de pedidos
-        /////<returns>Quantidade de pedidos</returns>
-        //public async Task<int> ContagemPedidos()
-        //{
-        //    return await _minishop2023Context.OrderItems.Select(x => x.OrderId).Distinct().CountAsync();
-        //}
 
         public async Task<List<CustomerOrder>> Pesquisar(int paginaAtual, int qtdPagina)
         {
@@ -30,7 +24,7 @@ namespace Minishop.DAL.Repositories
                 .ToListAsync();
         }
 
-        public override async Task<CustomerOrder> PesquisaPorId(int id)
+        public override async Task<CustomerOrder?> PesquisaPorId(int id)
         {
             // select top 1 * from T where id = :id
             return await _minishop2023Context

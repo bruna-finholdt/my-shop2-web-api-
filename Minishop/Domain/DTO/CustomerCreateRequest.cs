@@ -8,10 +8,13 @@ namespace Minishop.Domain.DTO
         public string FirstName { get; set; }
         [Required(ErrorMessage = "O sobrenome do cliente é obrigatório")]
         public string LastName { get; set; }
+        [Required(ErrorMessage = "O e-mail do cliente é obrigatório")]
+        [EmailAddress(ErrorMessage = "E-mail inválido")]
         public string Email { get; set; }
         public string Phone { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "O CPF do cliente é obrigatório")]
+        [RegularExpression(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$", ErrorMessage = "CPF inválido")]
         public string Cpf { get; set; }
     }
 }

@@ -15,6 +15,7 @@ namespace Minishop.Domain.DTO
                 City = supplier.City;
                 Uf = supplier.Uf;
                 Email = supplier.Email;
+                Cnpj = supplier.Cnpj;
             }
         }
         public int Id { get; private set; }
@@ -24,5 +25,6 @@ namespace Minishop.Domain.DTO
         public string City { get; private set; }
         public string Uf { get; private set; }
         public string Email { get; private set; }
+        public string Cnpj { get; private set; }
     }
 }

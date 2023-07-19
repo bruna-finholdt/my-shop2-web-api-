@@ -32,16 +32,7 @@ namespace Minishop.DAL.Repositories
                 .ToListAsync();
         }
 
-        //public async Task<List<Product>> PesquisarSupplierId(int supplierId)
-        //{
-        //    return await _minishop2023Context
-        //            .Set<Product>()
-        //            .Include(x => x.Supplier)
-        //            .Where(x => x.SupplierId == supplierId)
-        //            .ToListAsync();
-        //}
-
-        public override async Task<Product> PesquisaPorId(int id)
+        public override async Task<Product?> PesquisaPorId(int id)
         {
             // select top 1 * from T where id = :id
             return await _minishop2023Context
@@ -49,6 +40,7 @@ namespace Minishop.DAL.Repositories
                 .Include(x => x.Supplier)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
+
         }
 
         public async Task<bool> VerificarFornecedorExistente(int supplierId)
