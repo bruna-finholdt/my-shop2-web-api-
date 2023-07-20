@@ -141,7 +141,7 @@ namespace Minishop.Tests.Controllers
                 .ReturnsAsync(response);
 
             // Act
-            var result = await _controller.GetById(id);
+            var result = await _controller.GetById(id.ToString());
 
             // Assert
             Assert.IsType<OkObjectResult>(result);
@@ -163,7 +163,7 @@ namespace Minishop.Tests.Controllers
                 .ReturnsAsync(retorno);
 
             // Act
-            var result = await _controller.GetById(id);
+            var result = await _controller.GetById(id.ToString());
 
             // Assert
             var NotFoundResult = Assert.IsType<NotFoundObjectResult>(result);

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Minishop.Domain.DTO;
+using Minishop.Domain.DTO.Validation;
 using Minishop.Services;
 
 namespace Minishop.Controllers
@@ -43,10 +44,10 @@ namespace Minishop.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById([Id(ErrorMessage = "Valor de Id não condiz com formato esperado")] string id)
         {
             //Validação modelo de entrada
-            var retorno = await _service.PesquisaPorId(id);
+            var retorno = await _service.PesquisaPorId(int.Parse(id));
 
             if (retorno.Sucesso)
                 return Ok(retorno.Conteudo);
