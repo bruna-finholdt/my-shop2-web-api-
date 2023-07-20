@@ -136,6 +136,16 @@ namespace Minishop.Services
             }
 
             // Atualizar os campos do cliente com os valores do modelo, se eles não forem nulos ou vazios
+            if (!string.IsNullOrWhiteSpace(model.FirstName))
+            {
+                existingCustomer.FirstName = model.FirstName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.LastName))
+            {
+                existingCustomer.LastName = model.LastName;
+            }
+
             if (!string.IsNullOrWhiteSpace(model.Email))
             {
                 existingCustomer.Email = model.Email;

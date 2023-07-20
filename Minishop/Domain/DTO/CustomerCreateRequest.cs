@@ -11,13 +11,12 @@ namespace Minishop.Domain.DTO
         [Required(ErrorMessage = "O sobrenome do cliente é obrigatório")]
         public string LastName { get; set; }
         [Required(ErrorMessage = "O e-mail do cliente é obrigatório")]
-        [EmailAddress(ErrorMessage = "E-mail inválido")]
+        [Email(ErrorMessage = "E-mail inválido")]
         public string Email { get; set; }
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "O CPF do cliente é obrigatório")]
-        //[Cpf(ErrorMessage = "CPF inválido")]
-        [StringLength(11, MinimumLength = 11, ErrorMessage = "O CPF deve conter 11 dígitos")]
+        [Cpf(ErrorMessage = "CPF inválido")]
         public string Cpf { get; set; }
     }
 }

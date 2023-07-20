@@ -6,42 +6,70 @@ namespace Minishop.Domain.DTO.Validation
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public class Cpf : ValidationAttribute
     {
-        public override bool IsValid(object value)
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
-            if (value == null || !(value is string cpf))
+            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
             {
-                return false;
+                return new ValidationResult("O CPF do cliente é obrigatório");
             }
 
-            // Remover caracteres não numéricos
-            cpf = new string(cpf.Where(char.IsDigit).ToArray());
+            var cpf = value.ToString().Replace(".", "").Replace("-", "");
 
-            // Verificar se o CPF possui 11 dígitos
+            if (!IsCpfValid(cpf))
+            {
+                return new ValidationResult("CPF inválido");
+            }
+
+            return ValidationResult.Success;
+        }
+
+
+        private static bool IsCpfValid(string cpf)
+        {
             if (cpf.Length != 11)
             {
                 return false;
             }
 
-            // Verificar se todos os dígitos são iguais (CPF inválido)
-            if (cpf.Distinct().Count() == 1)
+
+            if (cpf == "00000000000" || cpf == "11111111111" || cpf == "22222222222" || cpf == "33333333333"
+                || cpf == "44444444444" || cpf == "55555555555" || cpf == "66666666666" || cpf == "77777777777"
+                || cpf == "88888888888" || cpf == "99999999999")
             {
                 return false;
             }
 
-            // Calcular os dígitos verificadores
-            int[] numbers = cpf.Take(9).Select(c => c - '0').ToArray();
-            int[] verificationDigits = new int[2];
+            int[] numbers = new int[11];
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 11; i++)
             {
-                int sum = numbers.Zip(Enumerable.Range(2, 9).Reverse(), (n, w) => n * w).Sum();
-                int remainder = (sum * 10) % 11;
-                verificationDigits[i] = remainder == 10 ? 0 : remainder;
-                numbers = numbers.Append(verificationDigits[i]).ToArray();
+                numbers[i] = int.Parse(cpf[i].ToString());
             }
 
-            // Verificar se os dígitos verificadores são válidos
-            return cpf.EndsWith($"{verificationDigits[0]}{verificationDigits[1]}");
+            int sum1 = 0;
+            for (int i = 0; i < 9; i++)
+            {
+                sum1 += numbers[i] * (10 - i);
+            }
+
+            int remainder1 = sum1 % 11;
+            int digit1 = remainder1 < 2 ? 0 : 11 - remainder1;
+
+            if (digit1 != numbers[9])
+            {
+                return false;
+            }
+
+            int sum2 = 0;
+            for (int i = 0; i < 10; i++)
+            {
+                sum2 += numbers[i] * (11 - i);
+            }
+
+            int remainder2 = sum2 % 11;
+            int digit2 = remainder2 < 2 ? 0 : 11 - remainder2;
+
+            return digit2 == numbers[10];
         }
     }
 }
