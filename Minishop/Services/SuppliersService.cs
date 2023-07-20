@@ -85,11 +85,17 @@ namespace Minishop.Services
                 return new ServiceResponse<SuppliersResponse>("E-mail duplicado");
             }
 
+            // Convert the 'Uf' value to uppercase before validation and saving
+            if (!string.IsNullOrEmpty(novo.Uf))
+            {
+                novo.Uf = novo.Uf.ToUpper();
+            }
+
             // Verificar se estado corresponde a uma das 27 siglas de estados brasileiros
             var estadosBrasileiros = new[] { "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO" };
-            if (!estadosBrasileiros.Contains(novo.Uf))
+            if (!string.IsNullOrEmpty(novo.Uf) && !estadosBrasileiros.Contains(novo.Uf, StringComparer.OrdinalIgnoreCase))
             {
-                return new ServiceResponse<SuppliersResponse>("Estado inválido");
+                return new ServiceResponse<SuppliersResponse>("Estado inválido.");
             }
 
             var supplier = new Supplier()
@@ -134,20 +140,44 @@ namespace Minishop.Services
                 }
             }
 
+            // Convert the 'Uf' value to uppercase before validation and saving
+            if (!string.IsNullOrEmpty(model.Uf))
+            {
+                model.Uf = model.Uf.ToUpper();
+            }
+
             // Verificar se estado corresponde a uma das 27 siglas de estados brasileiros
             var estadosBrasileiros = new[] { "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO" };
-            if (!estadosBrasileiros.Contains(model.Uf))
+            if (!string.IsNullOrEmpty(model.Uf) && !estadosBrasileiros.Contains(model.Uf, StringComparer.OrdinalIgnoreCase))
             {
                 return new ServiceResponse<SuppliersResponse>("Estado inválido.");
             }
 
-            // Atualizar os campos do fornecedor com os valores do modelo
-            existingSupplier.Email = model.Email;
-            existingSupplier.Phone = model.Phone;
-            existingSupplier.City = model.City;
-            existingSupplier.Uf = model.Uf;
-            existingSupplier.ContactName = model.ContactName;
-            // Atualize outras propriedades do fornecedor, se houver
+            // Atualizar os campos do fornecedor com os valores do modelo, se eles não forem nulos ou vazios
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                existingSupplier.Email = model.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Phone))
+            {
+                existingSupplier.Phone = model.Phone;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.City))
+            {
+                existingSupplier.City = model.City;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Uf))
+            {
+                existingSupplier.Uf = model.Uf;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.ContactName))
+            {
+                existingSupplier.ContactName = model.ContactName;
+            }
 
             // Chamar o método Editar do repositório para salvar as alterações no banco de dados
             var updatedSupplier = await _suppliersRepository.Editar(existingSupplier);

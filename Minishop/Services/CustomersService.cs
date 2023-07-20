@@ -135,10 +135,16 @@ namespace Minishop.Services
                 return new ServiceResponse<CustomerResponse>("E-mail duplicado.");
             }
 
-            // Atualizar os campos do cliente com os valores do modelo
-            existingCustomer.Email = model.Email;
-            existingCustomer.Phone = model.Phone;
-            // Atualize outras propriedades do cliente, se houver
+            // Atualizar os campos do cliente com os valores do modelo, se eles não forem nulos ou vazios
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                existingCustomer.Email = model.Email;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.Phone))
+            {
+                existingCustomer.Phone = model.Phone;
+            }
 
             // Chamar o método Editar do repositório para salvar as alterações no banco de dados
             var updatedCustomer = await _customersRepository.Editar(existingCustomer);

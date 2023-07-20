@@ -135,20 +135,41 @@ namespace Minishop.Services
                 return new ServiceResponse<ProductsResponse>("Produto não encontrado.");
             }
 
-            // Verificar se o ID do fornecedor enviado existe na base de dados
-            var supplierExists = await _productsRepository.VerificarFornecedorExistente(model.SupplierId);
-            if (!supplierExists)
+            // Verificar se o ID do fornecedor enviado existe na base de dados (only if SupplierId is provided)
+            if (model.SupplierId.HasValue)
             {
-                return new ServiceResponse<ProductsResponse>("Fornecedor não encontrado.");
+                var supplierExists = await _productsRepository.VerificarFornecedorExistente(model.SupplierId.Value);
+                if (!supplierExists)
+                {
+                    return new ServiceResponse<ProductsResponse>("Fornecedor não encontrado.");
+                }
             }
 
-            // Atualizar os campos do produto com os valores do modelo
-            existingProduct.ProductName = model.ProductName;
-            existingProduct.SupplierId = model.SupplierId;
-            existingProduct.UnitPrice = model.UnitPrice;
-            existingProduct.IsDiscontinued = model.IsDiscontinued;
-            existingProduct.PackageName = model.PackageName;
-            // Atualize outras propriedades do produto, se houver
+            // Atualizar os campos do produto com os valores do modelo, se eles não forem nulos ou vazios
+            if (!string.IsNullOrWhiteSpace(model.ProductName))
+            {
+                existingProduct.ProductName = model.ProductName;
+            }
+
+            if (model.SupplierId.HasValue)
+            {
+                existingProduct.SupplierId = model.SupplierId.Value;
+            }
+
+            if (model.UnitPrice.HasValue)
+            {
+                existingProduct.UnitPrice = model.UnitPrice.Value;
+            }
+
+            if (model.IsDiscontinued.HasValue)
+            {
+                existingProduct.IsDiscontinued = model.IsDiscontinued.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(model.PackageName))
+            {
+                existingProduct.PackageName = model.PackageName;
+            }
 
             // Chamar o método Editar do repositório para salvar as alterações no banco de dados
             var updatedProduct = await _productsRepository.Editar(existingProduct);
@@ -164,9 +185,5 @@ namespace Minishop.Services
 
             return new ServiceResponse<ProductsResponse>(response);
         }
-
-
-
-
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Minishop.Domain.DTO.Validation;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace Minishop.Domain.DTO
 {
@@ -14,7 +16,8 @@ namespace Minishop.Domain.DTO
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "O CPF do cliente é obrigatório")]
-        [RegularExpression(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$", ErrorMessage = "CPF inválido")]
+        //[Cpf(ErrorMessage = "CPF inválido")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "O CPF deve conter 11 dígitos")]
         public string Cpf { get; set; }
     }
 }
