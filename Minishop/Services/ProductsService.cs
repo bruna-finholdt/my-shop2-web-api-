@@ -92,9 +92,14 @@ namespace Minishop.Services
         public async Task<ServiceResponse<ProductsResponse>> Cadastrar(ProductCreateRequest novo)
         {
 
-            if (novo.UnitPrice == null || !novo.UnitPrice.HasValue || novo.UnitPrice.Value == 0)
+            if (novo.UnitPrice == null || !novo.UnitPrice.HasValue)
             {
                 return new ServiceResponse<ProductsResponse>("O preço deve ser informado.");
+            }
+
+            if (novo.UnitPrice.Value <= 0)
+            {
+                return new ServiceResponse<ProductsResponse>("O preço deve ter um valor positivo.");
             }
 
             // Verificar se o Id de supplier enviado existe na base de dados

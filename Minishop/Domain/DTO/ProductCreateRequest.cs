@@ -10,7 +10,7 @@ namespace Minishop.Domain.DTO
         public string ProductName { get; set; } = null!;
         [Required]
         public int SupplierId { get; set; }
-        [Required]
+        [Required(ErrorMessage = "O preço do produto é obrigatório.")]
         public decimal? UnitPrice { get; set; }
         [Required]
         public bool IsDiscontinued { get; set; }
