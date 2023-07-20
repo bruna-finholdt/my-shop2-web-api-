@@ -43,7 +43,7 @@ namespace Minishop.DAL.Repositories
 
         }
 
-        public async Task<bool> VerificarFornecedorExistente(int supplierId)
+        public async Task<bool> VerificarFornecedorExistente(int? supplierId)
         {
             // Verifica se há algum fornecedor com o ID especificado no banco de dados
             return await _minishop2023Context.Suppliers.AnyAsync(s => s.Id == supplierId);

@@ -251,7 +251,87 @@ namespace Minishop.Tests.Services
 
             // Assert
             Assert.False(response.Sucesso);
-            Assert.Equal("Estado inválido", response.Mensagem);
+            Assert.Equal("Estado inválido.", response.Mensagem);
+        }
+
+        [Fact]
+        public async Task Editar_DeveAtualizarFornecedorQuandoRequestValido()
+        {
+            // Arrange
+            int id = 1;
+            var supplierToUpdate = new Supplier
+            {
+                Id = id,
+                CompanyName = "Supplier Old",
+                Cnpj = "123456789",
+                Email = "supplierOld@example.com",
+                City = "City Old",
+                Uf = "MG",
+                Phone = "9876543210",
+                ContactName = "Contact Old"
+            };
+
+            var request = new SupplierUpdateRequest
+            {
+                Email = "supplierUpdated@example.com",
+                Phone = "9876543210",
+                City = "City Updated",
+                Uf = "SP",
+                ContactName = "Contact Updated"
+            };
+
+            _mockRepository.Setup(repo => repo.PesquisaPorId(id)).ReturnsAsync(supplierToUpdate);
+            _mockRepository.Setup(repo => repo.VerificarEmailExistente2(request.Email, id)).ReturnsAsync(false);
+            _mockRepository.Setup(repo => repo.Editar(It.IsAny<Supplier>()))
+                .ReturnsAsync((Supplier supplier) =>
+                {
+                    // Simulate the edit operation by updating the supplier object
+                    supplier.Email = request.Email;
+                    supplier.Phone = request.Phone;
+                    supplier.City = request.City;
+                    supplier.Uf = request.Uf;
+                    supplier.ContactName = request.ContactName;
+
+                    return supplier;
+                });
+
+            // Act
+            var response = await _suppliersService.Editar(id, request);
+
+            // Assert
+            Assert.True(response.Sucesso);
+            Assert.NotNull(response.Conteudo);
+            Assert.Equal(id, response.Conteudo.Id);
+            Assert.Equal(request.Email, response.Conteudo.Email);
+            Assert.Equal(request.Phone, response.Conteudo.Phone);
+            Assert.Equal(request.City, response.Conteudo.City);
+            Assert.Equal(request.Uf, response.Conteudo.Uf);
+            Assert.Equal(request.ContactName, response.Conteudo.ContactName);
+        }
+
+        [Fact]
+        public async Task Editar_DeveRetornarErroQuandoFornecedorNaoEncontrado()
+        {
+            // Arrange
+            int id = 99; // Um ID que não existe no banco de dados
+            var request = new SupplierUpdateRequest
+            {
+                Email = "supplierUpdated@example.com",
+                Phone = "9876543210",
+                City = "City Updated",
+                Uf = "SP",
+                ContactName = "Contact Updated"
+            };
+
+            _mockRepository.Setup(repo => repo.PesquisaPorId(id)).ReturnsAsync((Supplier)null);
+
+            // Act
+            var response = await _suppliersService.Editar(id, request);
+
+            // Assert
+            Assert.False(response.Sucesso);
+            Assert.Null(response.Conteudo);
+            Assert.Equal("Fornecedor não encontrado.", response.Mensagem);
         }
 
 

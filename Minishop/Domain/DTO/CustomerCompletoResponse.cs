@@ -8,7 +8,7 @@ namespace Minishop.Domain.DTO
         public CustomerCompletoResponse(Customer customer)
       : base(customer)
         {
-            Orders = customer.CustomerOrders.Select(order => new CustomerOrderResponse(order)).ToList();
+            Orders = customer.CustomerOrders.Select(order => new CustomerOrderResponse(order, excludeCustomer: true)).ToList();
             TotalAmountSpent = customer.CustomerOrders.Sum(order => order.TotalAmount);
             Cpf = customer.Cpf;
         }
