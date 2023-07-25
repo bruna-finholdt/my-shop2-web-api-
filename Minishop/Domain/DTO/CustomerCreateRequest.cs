@@ -17,7 +17,6 @@ namespace Minishop.Domain.DTO
 
         [Required(ErrorMessage = "O CPF do cliente é obrigatório")]
         [Cpf(ErrorMessage = "CPF inválido")]
-        //[StringLength(11, MinimumLength = 11, ErrorMessage = "O CPF deve conter 11 dígitos")]
         public string Cpf { get; set; }
     }
 }
