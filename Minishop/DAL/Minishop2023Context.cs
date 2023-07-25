@@ -25,7 +25,8 @@ public partial class Minishop2023Context : DbContext
 
     public virtual DbSet<Supplier> Suppliers { get; set; }
 
-    //EntityEntry ICustomersDbContext.Entry(object entity) => Entry(entity);
+    public DbSet<User> Users { get; set; }
+    public DbSet<Role> Roles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

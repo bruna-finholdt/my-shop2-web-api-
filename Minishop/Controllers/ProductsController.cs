@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Minishop.Services;
 using Minishop.Domain.DTO;
 using Minishop.Domain.DTO.Validation;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Minishop.Controllers
 {
@@ -19,6 +20,7 @@ namespace Minishop.Controllers
         }
 
         [HttpGet("contagem")]
+        [AllowAnonymous]
         public async Task<ActionResult<ItemCountResponse>> ObterContagem()//Contagem Products
 
         {
@@ -28,6 +30,7 @@ namespace Minishop.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Get([FromQuery] PageQueryRequest queryResquest)
         {
             //Validação modelo de entrada
@@ -39,6 +42,7 @@ namespace Minishop.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetById([Id(ErrorMessage = "Valor de Id não condiz com formato esperado")] string id)
         {
             //Validação modelo de entrada
@@ -51,6 +55,7 @@ namespace Minishop.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "1, 3")]
         // FromBody para indicar de o corpo da requisição deve ser mapeado para o modelo
         public async Task<IActionResult> Post([FromBody] ProductCreateRequest postModel)
         {
@@ -69,6 +74,7 @@ namespace Minishop.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "1, 3")]
         public async Task<IActionResult> Put(int id, [FromBody] ProductUpdateRequest updateModel)
         {
             if (ModelState.IsValid)

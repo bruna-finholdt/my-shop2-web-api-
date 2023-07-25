@@ -12,13 +12,9 @@ namespace Minishop.Services
     {
         private readonly ICustomersRepository _customersRepository;
 
-        ////private readonly IMinishop2023Context _context;
-        //private readonly ICustomersDbContext _context;
-
         public CustomersService(ICustomersRepository customersRepository)
         {
             _customersRepository = customersRepository;
-            //_context = context;
 
         }
 
