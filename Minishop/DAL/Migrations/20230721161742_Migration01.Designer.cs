@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Minishop.DAL;
 
@@ -11,9 +12,11 @@ using Minishop.DAL;
 namespace Minishop.DAL.Migrations
 {
     [DbContext(typeof(Minishop2023Context))]
-    partial class Minishop2023ContextModelSnapshot : ModelSnapshot
+    [Migration("20230721161742_Migration01")]
+    partial class Migration01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,23 +191,6 @@ namespace Minishop.DAL.Migrations
                     b.ToTable("Product", (string)null);
                 });
 
-            modelBuilder.Entity("Minishop.Domain.Entity.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
-                });
-
             modelBuilder.Entity("Minishop.Domain.Entity.Supplier", b =>
                 {
                     b.Property<int>("Id")
@@ -293,16 +279,15 @@ namespace Minishop.DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -346,17 +331,6 @@ namespace Minishop.DAL.Migrations
                         .HasConstraintName("FK_PRODUCT_REFERENCE_SUPPLIER");
 
                     b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("Minishop.Domain.Entity.User", b =>
-                {
-                    b.HasOne("Minishop.Domain.Entity.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("Minishop.Domain.Entity.Customer", b =>

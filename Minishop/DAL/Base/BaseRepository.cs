@@ -44,10 +44,10 @@ namespace Minishop.DAL.Base
         /// </summary>
         /// <param name="novo">Nova entidade</param>
         /// <returns>Entidade criada</returns>
-        public async Task<T> Cadastrar(T novo)
+        public virtual async Task<T?> Cadastrar(T novo)
         {
             _minishop2023Context.Add(novo);
-            await _minishop2023Context.SaveChangesAsync(); // Todo o Entity está preparado para isso
+            await _minishop2023Context.SaveChangesAsync();
             return novo;
         }
 
@@ -56,7 +56,7 @@ namespace Minishop.DAL.Base
         /// </summary>
         /// <param name="model">Nova entidade</param>
         /// <returns>Entidade atualizada</returns>
-        public async Task<T> Editar(T model)
+        public virtual async Task<T> Editar(T model)
         {
             _minishop2023Context.Entry(model).State = EntityState.Modified;
             await _minishop2023Context.SaveChangesAsync();
