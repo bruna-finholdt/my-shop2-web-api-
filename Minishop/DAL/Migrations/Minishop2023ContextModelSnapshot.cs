@@ -188,6 +188,31 @@ namespace Minishop.DAL.Migrations
                     b.ToTable("Product", (string)null);
                 });
 
+            modelBuilder.Entity("Minishop.Domain.Entity.ProductImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Sequencia")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+                });
+
             modelBuilder.Entity("Minishop.Domain.Entity.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -346,6 +371,17 @@ namespace Minishop.DAL.Migrations
                         .HasConstraintName("FK_PRODUCT_REFERENCE_SUPPLIER");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("Minishop.Domain.Entity.ProductImage", b =>
+                {
+                    b.HasOne("Minishop.Domain.Entity.Product", "Produto")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("Minishop.Domain.Entity.User", b =>

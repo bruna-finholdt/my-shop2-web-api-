@@ -10,7 +10,13 @@ namespace Minishop.Services
         Task<ProductCountResponse> Contar();
         Task<ServicePagedResponse<ProductsResponse>> Pesquisar(PageQueryRequest queryResquest);
         Task<ServiceResponse<ProductsCompletoResponse>> PesquisaPorId(int id);
-        Task<ServiceResponse<ProductsResponse>> Cadastrar(ProductCreateRequest novo);
-        Task<ServiceResponse<ProductsResponse>> Editar(int id, ProductUpdateRequest model);
+        Task<ServiceResponse<ProductsCompletoResponse>> Cadastrar(ProductCreateRequest novo);
+        Task<ServiceResponse<ProductsCompletoResponse>> Editar(int id, ProductUpdateRequest model);
+        Task<ServiceResponse<List<ProductImageResponse>>> EditarImagem(int productId, ProductImageUpdateRequest model);
+        Task<ServiceResponse<ProductImageResponse>> CadastrarImagem(IFormFile file, int productId);
+        Task<ServiceResponse<List<ProductImageResponse>>> AlterarOrdemImagens(int productId, ProductImageOrderUpdateRequest model);
+        Task<ServiceResponse<ProductsCompletoResponse>> PesquisaPorIdCompleto(int id);
+
+
     }
 }

@@ -12,8 +12,18 @@ namespace Minishop.DAL.Repositories
         Task<List<Product>> Pesquisar(int paginaAtual, int qtdPagina);
         //Task<List<Product>> PesquisarSupplierId(int supplierId);
         Task<Product> PesquisaPorId(int id);
-        //Task<bool> VerificarFornecedorExistente(int id);
-        Task<bool> VerificarFornecedorExistente(int? supplierId);
+        Task<ProductImage> CadastrarImagem(ProductImage productImage);
+        Task<bool> RemoverImagem(int imageId);
+        Task<int> GetImageCount(int productId);
+        Task<bool> ReorganizarSequenciaDeImagens(int productId);
+        Task<List<ProductImage>> GetImagesByProductId(int productId);
+        Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images);
+        Task EditarImagem(ProductImage productImage);
+        Task<int> GetHighestSequence(int productId);
+
+
+
+
     }
 }
 

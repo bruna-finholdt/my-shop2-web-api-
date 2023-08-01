@@ -14,6 +14,7 @@ namespace Minishop.DAL.Repositories
         Task<User?> Cadastrar(User novo);
         Task<User> Editar(User model);
 
+        Task<List<int>> GetValidRoleIds();
 
     }
 }

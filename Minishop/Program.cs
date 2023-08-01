@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Amazon.S3;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -7,6 +8,7 @@ using Minishop.DAL;
 using Minishop.DAL.Repositories;
 using Minishop.Services;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,16 +65,12 @@ builder.Services.AddAuthentication(x =>
         };
     });
 
-//// Configuração de autorização
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("AdminOnly", policy =>
-//        policy.RequireRole("admin"));
-//});
-
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+// Adicionando as configurações AWS
+builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+builder.Services.AddAWSService<IAmazonS3>();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -92,6 +90,11 @@ builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 builder.Services.AddScoped<IOrdersRepository, OrdersRepository>();
 builder.Services.AddScoped<ISuppliersRepository, SuppliersRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+//builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
+builder.Services.AddScoped<IStorageService, StorageService>();
+
+
+
 
 // Injetando reposit�rios: AddScoped - Uma nova inst�ncia cada vez que necess�rio
 builder.Services.AddTransient<CustomersService>();

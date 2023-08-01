@@ -12,5 +12,6 @@ namespace Minishop.Services
         Task<ServiceResponse<UserResponse>> Editar(int id, UserUpdateRequest model);
         Task<ServiceResponse<UserResponse>> PesquisaPorNome(string userName);
         Task<ServiceResponse<UserResponse>> Logar(UserLoginRequest model);
+
     }
 }

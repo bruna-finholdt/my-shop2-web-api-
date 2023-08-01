@@ -13,18 +13,18 @@ namespace Minishop.Domain.DTO
             QuantityItems = customerOrder.OrderItems.Count;
         }
 
-        // Constructor overload without nested Customer
-        public CustomerOrderResponse(CustomerOrder customerOrder, bool excludeCustomer)
-        {
-            Id = customerOrder.Id;
-            OrderDate = customerOrder.OrderDate;
-            TotalAmount = customerOrder.TotalAmount;
-            if (!excludeCustomer)
-            {
-                Customer = new CustomerResponse(customerOrder.Customer);
-            }
-            QuantityItems = customerOrder.OrderItems.Count;
-        }
+        //// Constructor overload without nested Customer
+        //public CustomerOrderResponse(CustomerOrder customerOrder, bool excludeCustomer)
+        //{
+        //    Id = customerOrder.Id;
+        //    OrderDate = customerOrder.OrderDate;
+        //    TotalAmount = customerOrder.TotalAmount;
+        //    if (!excludeCustomer)
+        //    {
+        //        Customer = new CustomerResponse(customerOrder.Customer);
+        //    }
+        //    QuantityItems = customerOrder.OrderItems.Count;
+        //}
 
         public int Id { get; private set; }
         public DateTime OrderDate { get; private set; }

@@ -16,11 +16,15 @@ namespace Minishop.Tests.Services
     {
         private readonly Mock<IProductsRepository> _mockRepository;
         private readonly ProductsService _productsService;
+        private readonly Mock<IStorageService> _mockStorageService; // Assuming you also have a mock for IStorageService
+        private readonly Mock<ISuppliersRepository> _mockSuppliersRepository;
 
         public ProductsServiceTest()
         {
             _mockRepository = new Mock<IProductsRepository>();
-            _productsService = new ProductsService(_mockRepository.Object);
+            _mockSuppliersRepository = new Mock<ISuppliersRepository>();
+            _mockStorageService = new Mock<IStorageService>(); // Initialize the mock for IStorageService
+            _productsService = new ProductsService(_mockRepository.Object, _mockSuppliersRepository.Object, _mockStorageService.Object);
         }
 
         [Fact]
@@ -147,7 +151,9 @@ namespace Minishop.Tests.Services
                 PackageName = "Package 1"
             };
 
-            _mockRepository.Setup(repo => repo.VerificarFornecedorExistente(request.SupplierId)).ReturnsAsync(true);
+            // Set up the behavior of ISuppliersRepository for the scenario where the supplier exists (returning true)
+            _mockSuppliersRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync(new Supplier());
+
 
             Product savedProduct = null;
             _mockRepository.Setup(repo => repo.Cadastrar(It.IsAny<Product>()))
@@ -180,7 +186,8 @@ namespace Minishop.Tests.Services
                 PackageName = "Package 1"
             };
 
-            _mockRepository.Setup(repo => repo.VerificarFornecedorExistente(request.SupplierId)).ReturnsAsync(false);
+            // Set up the behavior of ISuppliersRepository for the scenario where the supplier does not exist (returning null)
+            _mockSuppliersRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync((Supplier)null);
 
             // Act
             var response = await _productsService.Cadastrar(request);
@@ -216,7 +223,7 @@ namespace Minishop.Tests.Services
             };
 
             _mockRepository.Setup(repo => repo.PesquisaPorId(id)).ReturnsAsync(existingProduct);
-            _mockRepository.Setup(repo => repo.VerificarFornecedorExistente(request.SupplierId)).ReturnsAsync(true);
+            _mockSuppliersRepository.Setup(repo => repo.PesquisaPorId(request.SupplierId.Value)).ReturnsAsync(new Supplier()); // Use PesquisaPorId to check supplier existence
 
             Product savedProduct = null;
             _mockRepository.Setup(repo => repo.Editar(It.IsAny<Product>()))
