@@ -128,7 +128,7 @@ namespace Minishop.Tests.Controllers
 
             var response = new ServiceResponse<ProductsCompletoResponse>(new ProductsCompletoResponse(product));
 
-            _mockService.Setup(service => service.PesquisaPorId(id))
+            _mockService.Setup(service => service.PesquisaPorIdCompleto(id))
                 .ReturnsAsync(response);
 
             // Act
@@ -150,7 +150,7 @@ namespace Minishop.Tests.Controllers
 
             var retorno = new ServiceResponse<ProductsCompletoResponse>(mensagem);
 
-            _mockService.Setup(service => service.PesquisaPorId(id))
+            _mockService.Setup(service => service.PesquisaPorIdCompleto(id))
                 .ReturnsAsync(retorno);
 
             // Act
@@ -187,7 +187,7 @@ namespace Minishop.Tests.Controllers
                 PackageName = "New Package"
             };
 
-            var expectedResponse = new ServiceResponse<ProductsResponse>(new ProductsResponse(product));
+            var expectedResponse = new ServiceResponse<ProductsCompletoResponse>(new ProductsCompletoResponse(product));
 
             _mockService.Setup(service => service.Cadastrar(productCreateRequest))
                 .ReturnsAsync(expectedResponse);
@@ -198,7 +198,8 @@ namespace Minishop.Tests.Controllers
             // Assert
             Assert.IsType<OkObjectResult>(result);
             var okResult = result as OkObjectResult;
-            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+            var response = okResult.Value as ServiceResponse<ProductsCompletoResponse>; // Extrair o ServiceResponse<ProductsCompletoResponse>
+            Assert.Equal(expectedResponse.Conteudo, response.Conteudo); // Comparar apenas a propriedade Conteudo
         }
 
         [Fact]
@@ -254,7 +255,7 @@ namespace Minishop.Tests.Controllers
                 PackageName = "Updated Package"
             };
 
-            var expectedResponse = new ServiceResponse<ProductsResponse>(new ProductsResponse(product));
+            var expectedResponse = new ServiceResponse<ProductsCompletoResponse>(new ProductsCompletoResponse(product));
 
             _mockService.Setup(service => service.Editar(id, productUpdateRequest))
                 .ReturnsAsync(expectedResponse);
@@ -265,7 +266,8 @@ namespace Minishop.Tests.Controllers
             // Assert
             Assert.IsType<OkObjectResult>(result);
             var okResult = result as OkObjectResult;
-            Assert.Equal(expectedResponse.Conteudo, okResult.Value);
+            var response = okResult.Value as ServiceResponse<ProductsCompletoResponse>; // Extrair o ServiceResponse<ProductsCompletoResponse>
+            Assert.Equal(expectedResponse.Conteudo, response.Conteudo); // Comparar apenas a propriedade Conteudo
         }
 
 

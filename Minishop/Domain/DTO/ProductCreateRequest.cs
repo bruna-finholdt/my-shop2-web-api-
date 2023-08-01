@@ -17,5 +17,6 @@ namespace Minishop.Domain.DTO
 
         [StringLength(100, ErrorMessage = "Tamanho máximo de caracteres no nome do produto é 100")]
         public string? PackageName { get; set; }
+
     }
 }

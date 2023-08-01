@@ -3,6 +3,7 @@ using Minishop.DAL.Repositories;
 using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
 using Minishop.Services.Base;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
@@ -108,10 +109,14 @@ namespace Minishop.Services
                 return new ServiceResponse<UserResponse>("A confirmação de senha não corresponde à senha digitada.");
             }
 
+            // Obter a lista de RoleIds válidos do repositório
+            var validRoleIds = await _usersRepository.GetValidRoleIds();
+
             // Verificar se o RoleId é válido
-            if (model.RoleId < 1 || model.RoleId > 3)
+            if (!validRoleIds.Contains(model.RoleId))
             {
-                return new ServiceResponse<UserResponse>("RoleId inválido! O RoleId do usuário deve ser 1 para 'admin', 2 para 'common' ou 3 para 'seller'.");
+                var validRoleIdsStr = string.Join(", ", validRoleIds);
+                return new ServiceResponse<UserResponse>($"RoleId inválido! O RoleId do usuário deve ser um dos seguintes valores: {validRoleIdsStr}.");
             }
 
             // Mapear o UserCreateRequest para a entidade User
@@ -162,10 +167,14 @@ namespace Minishop.Services
                 return new ServiceResponse<UserResponse>("Não é permitido editar o próprio perfil.");
             }
 
-            // Verificar se o RoleId é válido
-            if (model.RoleId < 1 || model.RoleId > 3)
+            // Obter a lista de RoleIds válidos do repositório
+            var validRoleIds = await _usersRepository.GetValidRoleIds();
+
+            // Verificar se o RoleId é válido, mas permitir que seja null (não modificado)
+            if (model.RoleId.HasValue && !validRoleIds.Contains(model.RoleId.Value))
             {
-                return new ServiceResponse<UserResponse>("RoleId inválido! O RoleId do usuário deve ser 1 para 'admin', 2 para 'common' ou 3 para 'seller'.");
+                var validRoleIdsStr = string.Join(", ", validRoleIds);
+                return new ServiceResponse<UserResponse>($"RoleId inválido! O RoleId do usuário deve ser um dos seguintes valores: {validRoleIdsStr}.");
             }
 
             // Atualizar os campos do cliente com os valores do modelo, se eles não forem nulos ou vazios

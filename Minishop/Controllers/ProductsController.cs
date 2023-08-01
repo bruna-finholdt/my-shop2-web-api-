@@ -13,7 +13,6 @@ namespace Minishop.Controllers
     {
         private readonly IProductsService _service;
 
-
         public ProductsController(IProductsService service)
         {
             _service = service;
@@ -42,52 +41,30 @@ namespace Minishop.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetById([Id(ErrorMessage = "Valor de Id não condiz com formato esperado")] string id)
         {
-            //Validação modelo de entrada
-            var retorno = await _service.PesquisaPorId(int.Parse(id));
+            // Validação modelo de entrada
+            var retornoCompleto = await _service.PesquisaPorIdCompleto(int.Parse(id));
 
-            if (retorno.Sucesso)
-                return Ok(retorno.Conteudo);
-            else
-                return NotFound(retorno);
+            if (!retornoCompleto.Sucesso)
+                return NotFound(retornoCompleto);
+
+            return Ok(retornoCompleto.Conteudo);
         }
 
-        [HttpPost]
-        [Authorize(Roles = "1, 3")]
-        // FromBody para indicar de o corpo da requisição deve ser mapeado para o modelo
-        public async Task<IActionResult> Post([FromBody] ProductCreateRequest postModel)
-        {
-            //Validação modelo de entrada
-            if (ModelState.IsValid)
-            {
-                var retorno = await _service.Cadastrar(postModel);
-                if (!retorno.Sucesso)
-                    return BadRequest(retorno);
-                else
-                    return Ok(retorno.Conteudo);
-            }
-            else
-                return BadRequest(ModelState);
-        }
-
-
-        [HttpPut("{id}")]
-        [Authorize(Roles = "1, 3")]
-        public async Task<IActionResult> Put(int id, [FromBody] ProductUpdateRequest updateModel)
+        [HttpPost("Produto")]
+        //[Authorize(Roles = "1, 3")]
+        public async Task<IActionResult> Post([FromBody] ProductCreateRequest model)
         {
             if (ModelState.IsValid)
             {
-                var retorno = await _service.Editar(id, updateModel);
-                if (!retorno.Sucesso)
-                {
-                    return BadRequest(retorno.Mensagem);
-                }
-                else
-                {
-                    return Ok(retorno.Conteudo);
-                }
+                var produtoResponse = await _service.Cadastrar(model);
+
+                if (!produtoResponse.Sucesso)
+                    return BadRequest(produtoResponse);
+
+                return Ok(produtoResponse);
             }
             else
             {
@@ -95,6 +72,110 @@ namespace Minishop.Controllers
             }
         }
 
+        //testar
+        [HttpPost("Imagem do Produto")]
+        //[Authorize(Roles = "1, 3")]
+        public async Task<IActionResult> Post([FromForm] int productId, [FromForm] List<IFormFile> files)
+        {
+            // Valida o formato do arquivo (PNG, JPG ou JPEG)
+            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
+            if (files != null && files.Any())
+            {
+                foreach (IFormFile file in files)
+                {
+                    var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                    if (!allowedExtensions.Contains(fileExtension))
+                    {
+                        return BadRequest("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.");
+                    }
+                }
+            }
+
+            if (ModelState.IsValid)
+            {
+                List<ProductImageResponse> imagemResponses = new List<ProductImageResponse>();
+                if (files != null && files.Any())
+                {
+
+                    foreach (IFormFile file in files)
+                    {
+                        var retornoImagem = await _service.CadastrarImagem(file, productId);
+                        if (!retornoImagem.Sucesso)
+                        {
+                            return BadRequest(retornoImagem);
+                        }
+
+
+                        imagemResponses.Add(retornoImagem.Conteudo);
+                    }
+                }
+                return Ok(imagemResponses);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
+        }
+
+        [HttpPut("Produto/{productId}")]
+        //[Authorize(Roles = "1, 3")]
+        public async Task<IActionResult> Put(int productId, [FromBody] ProductUpdateRequest model)
+        {
+            // Validate the model and other necessary checks
+            if (ModelState.IsValid)
+            {
+                var updatedProduct = await _service.Editar(productId, model);
+
+                if (updatedProduct == null)
+                    return NotFound("Produto não encontrado");
+
+                return Ok(updatedProduct);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
+        }
+
+        //testar
+        [HttpPut("Imagem do Produto/{productId}")]
+        //[Authorize(Roles = "1, 3")]
+        public async Task<IActionResult> Put(int productId, [FromForm] ProductImageUpdateRequest model)
+        {
+
+            if (ModelState.IsValid)
+            {
+                var response = await _service.EditarImagem(productId, model);
+
+                if (!response.Sucesso)
+                    return BadRequest(response);
+
+                return Ok(response);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
+        }
+
+        [HttpPut("Imagem do Produto/{productId}/AlterarOrdem")]
+        //[Authorize(Roles = "1, 3")]
+        public async Task<IActionResult> Put(int productId, [FromBody] ProductImageOrderUpdateRequest model)
+        {
+            if (ModelState.IsValid)
+            {
+                var response = await _service.AlterarOrdemImagens(productId, model);
+
+                if (!response.Sucesso)
+                    return BadRequest(response);
+
+                return Ok(response);
+            }
+            else
+            {
+                return BadRequest(ModelState);
+            }
+        }
 
     }
 }

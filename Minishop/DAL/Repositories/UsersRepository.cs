@@ -24,6 +24,11 @@ namespace Minishop.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<int>> GetValidRoleIds()
+        {
+            return await _minishop2023Context.Roles.Select(role => role.Id).ToListAsync();
+        }
+
         public override async Task<User?> PesquisaPorId(int id)
         {
             // select top 1 * from T where id = :id
@@ -48,7 +53,6 @@ namespace Minishop.DAL.Repositories
         {
             _minishop2023Context.Add(novo);
 
-            // Load the Role navigation property
             novo.Role = await _minishop2023Context.Roles.FindAsync(novo.RoleId);
 
             await _minishop2023Context.SaveChangesAsync();
@@ -59,7 +63,6 @@ namespace Minishop.DAL.Repositories
         {
             _minishop2023Context.Entry(model).State = EntityState.Modified;
 
-            // Load the Role navigation property
             model.Role = await _minishop2023Context.Roles.FindAsync(model.RoleId);
 
             await _minishop2023Context.SaveChangesAsync();

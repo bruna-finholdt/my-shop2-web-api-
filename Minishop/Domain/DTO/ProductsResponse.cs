@@ -13,6 +13,7 @@ namespace Minishop.Domain.DTO
             UnitPrice = product.UnitPrice;
             IsDiscontinued = product.IsDiscontinued;
             PackageName = product.PackageName;
+
         }
 
         public int Id { get; private set; }
@@ -21,5 +22,6 @@ namespace Minishop.Domain.DTO
         public decimal? UnitPrice { get; private set; }
         public bool IsDiscontinued { get; private set; }
         public string? PackageName { get; private set; }
+
     }
 }
