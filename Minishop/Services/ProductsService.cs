@@ -130,10 +130,8 @@ namespace Minishop.Services
             return new ServiceResponse<ProductsCompletoResponse>(response);
         }
 
-        //testar
         public async Task<ServiceResponse<ProductImageResponse>> CadastrarImagem(IFormFile file, int productId)
         {
-
             //Valida se o produto com o ID fornecido existe na base de dados
             var existingProduct = await _productsRepository.PesquisaPorId(productId);
             if (existingProduct == null)
@@ -141,16 +139,16 @@ namespace Minishop.Services
                 return new ServiceResponse<ProductImageResponse>("Produto não encontrado.");
             }
 
-            // Get the highest sequence value for the given productId from the database
+            //Obtém do db o valor de Sequencia mais alto para aquele produto
             int highestSequence = await _productsRepository.GetHighestSequence(productId);
 
-            // Increment the sequence to determine the next value
+            //Incrementa em 1 o valor da highestSequence
             int nextSequence = highestSequence + 1;
 
             //Cadastra a imagem do produto no bucket e obtém a URL da imagem (key)
             string imageUrl = await _storageService.UploadFile(file, productId);
 
-            //Cria uma nova instância de ProductImage para salvar no banco de dados
+            //Cria uma nova instância de ProductImage para salvar no db
             var productImage = new ProductImage
             {
                 Url = imageUrl,
@@ -158,7 +156,7 @@ namespace Minishop.Services
                 Sequencia = nextSequence
             };
 
-            //Chama o método do repository, que salva a imagem do produto no banco de dados
+            //Chama o método do repository, que salva a imagem do produto no db
             var createdProductImage = await _productsRepository.CadastrarImagem(productImage);
 
             if (createdProductImage == null)
@@ -202,7 +200,7 @@ namespace Minishop.Services
                 existingProduct.Supplier = supplier;
             }
 
-            //Atualiza os campos do produto com os valores do modelo, se eles não forem nulos ou vazios
+            //Atualiza os campos do produto com os valores do modelo, se eles não forem modificados
             if (!string.IsNullOrWhiteSpace(model.ProductName))
             {
                 existingProduct.ProductName = model.ProductName;
@@ -231,29 +229,22 @@ namespace Minishop.Services
                 return new ServiceResponse<ProductsCompletoResponse>("Erro ao editar o produto.");
             }
 
-            ////Obtém as imagens atualizadas daquele produto específico
-            //var updatedImages = await _productsRepository.GetImagesByProductId(updatedProduct.Id);
-
-            ////Converte o updated product em DTO response
+            //Converte o updated product em DTO response
             var productResponse = new ProductsCompletoResponse(updatedProduct);
-            //var imageResponses = updatedImages.Select(img => new ProductImageResponse(img)).ToList();
-
-            ////Cria o ProductAndImageResponse para incluir ambos os responses, do produto e das imagens 
-            //var response = new ProductAndImageResponse(productResponse, imageResponses);
 
             return new ServiceResponse<ProductsCompletoResponse>(productResponse);
         }
 
-        //testar
         public async Task<ServiceResponse<List<ProductImageResponse>>> EditarImagem(int productId, ProductImageUpdateRequest model)
         {
+
             var existingProduct = await _productsRepository.PesquisaPorId(productId);
             if (existingProduct == null)
             {
                 return new ServiceResponse<List<ProductImageResponse>>("Produto não encontrado.");
             }
 
-            // Validate the format of new images (PNG, JPG, or JPEG)
+            //Valida o formato de arquivo da(s) nova(s) imagem(ens) (PNG, JPG, or JPEG)
             var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
             if (model.NewImages != null && model.NewImages.Any())
             {
@@ -267,45 +258,44 @@ namespace Minishop.Services
                 }
             }
 
-            // Remove images
+            //Remove imagem(ens) existente(s)
             if (model.ImageIdsToRemove != null && model.ImageIdsToRemove.Any())
             {
                 foreach (var imageId in model.ImageIdsToRemove)
                 {
-                    // Remove the image from the bucket and the database
+                    //Remove a imagem do db
                     bool imageRemoved = await _productsRepository.RemoverImagem(imageId);
 
-                    // Verifies if the image was removed successfully
                     if (!imageRemoved)
                     {
                         return new ServiceResponse<List<ProductImageResponse>>($"Erro ao remover imagem com ID {imageId}.");
                     }
                 }
-
-                // Reorganiza as sequências of images after removing
-                bool reorganized = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
-
-                if (!reorganized)
-                {
-                    return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar as sequências das imagens após a remoção.");
-                }
             }
 
-            // Get the current images associated with the product
+            // Reorganiza a sequência das imagens após a remoção
+            bool reorganizedAfterRemove = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
+
+            if (!reorganizedAfterRemove)
+            {
+                return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a remoção.");
+            }
+
+            //Obtém as imagens associadas aquele produto
             var existingImages = await _productsRepository.GetImagesByProductId(productId);
 
-            // Calculate the next sequence value based on the count of existing images
+            //Calcula o valor da próxima sequencia baseada na contagem das imagens existentes
             int nextSequence = existingImages.Count + 1;
 
-            // Add new images
+            // Cadastra nova(s) imagem(ens)
             if (model.NewImages != null && model.NewImages.Any())
             {
                 foreach (IFormFile file in model.NewImages)
                 {
-                    // Cadastra a nova imagem do produto no bucket e obtém a URL da imagem
+                    // Cadastra a(s) nova(s) imagem(ens) do produto no bucket e obtém a URL da imagem
                     string imageUrl = await _storageService.UploadFile(file, productId);
 
-                    // Cria uma nova instância de ProductImage para salvar no banco de dados
+                    // Cria uma nova instância de ProductImage para salvar no db
                     var productImage = new ProductImage
                     {
                         Url = imageUrl,
@@ -313,22 +303,22 @@ namespace Minishop.Services
                         Sequencia = nextSequence
                     };
 
-                    // Chama o método do repository para salvar a imagem do produto no banco de dados
+                    // Chama o método do repository para salvar a imagem do produto no db
                     await _productsRepository.CadastrarImagem(productImage);
 
-                    nextSequence++; // Increment the nextSequence for the next iteration
+                    nextSequence++; // Incrementa o nextSequence 
                 }
             }
 
-            // Reorganiza as sequências das imagens after adding new images
+            // Reorganiza a sequência das imagens após cadastrar nova(s) imagem(ens)
             bool reorganizedAfterAdd = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
 
             if (!reorganizedAfterAdd)
             {
-                return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar as sequências das imagens após a adição.");
+                return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a adição.");
             }
 
-            // Obtém todas as imagens atualizadas associadas ao produto após as edições
+            //Obtém todas as imagens atualizadas associadas ao produto após as edições
             var updatedImages = await _productsRepository.GetImagesByProductId(productId);
 
             var response = new List<ProductImageResponse>();
@@ -338,9 +328,9 @@ namespace Minishop.Services
             }
 
             return new ServiceResponse<List<ProductImageResponse>>(response);
+
         }
 
-        //testar
         public async Task<ServiceResponse<List<ProductImageResponse>>> AlterarOrdemImagens(int productId, ProductImageOrderUpdateRequest model)
         {
             var existingProduct = await _productsRepository.PesquisaPorId(productId);
@@ -356,26 +346,26 @@ namespace Minishop.Services
                 return new ServiceResponse<List<ProductImageResponse>>("A lista de IDs de imagens fornecida não corresponde à quantidade de imagens do produto.");
             }
 
-            // Verifica se os IDs fornecidos são válidos e pertencem ao produto
+            //Verifica se os IDs fornecidos são válidos e pertencem ao produto
             var validImageIds = images.Select(img => img.Id);
             if (!model.ImageIds.All(id => validImageIds.Contains(id)))
             {
                 return new ServiceResponse<List<ProductImageResponse>>("A lista de IDs de imagens contém IDs inválidos ou não pertencentes ao produto.");
             }
 
-            // Atualiza a sequência de cada imagem de acordo com a lista de IDs fornecida
+            //Atualiza a sequência de cada imagem de acordo com a lista de IDs fornecida
             for (int i = 0; i < model.ImageIds.Count; i++)
             {
                 var imageId = model.ImageIds[i];
                 var image = images.FirstOrDefault(img => img.Id == imageId);
                 if (image != null && image.Sequencia != (i + 1))
                 {
-                    image.Sequencia = i + 1; // Adiciona 1 ao valor do índice para manter a sequência iniciando em 1
+                    image.Sequencia = i + 1; //Adiciona 1 ao valor do índice para manter a sequência iniciando em 1
                     await _productsRepository.EditarImagem(image);
                 }
             }
 
-            // Obtém todas as imagens atualizadas associadas ao produto após a alteração de ordem
+            //Obtém todas as imagens atualizadas associadas ao produto após a alteração de ordem
             var updatedImages = await _productsRepository.GetImagesByProductId(productId);
 
             var response = new List<ProductImageResponse>();
@@ -408,6 +398,8 @@ namespace Minishop.Services
 
             return new ServiceResponse<ProductsCompletoResponse>(product);
         }
+
+
 
 
 

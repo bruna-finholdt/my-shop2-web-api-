@@ -72,21 +72,21 @@ namespace Minishop.Controllers
             }
         }
 
-        //testar
-        [HttpPost("Imagem do Produto")]
+        [HttpPost("ImagemdoProduto")]
         //[Authorize(Roles = "1, 3")]
         public async Task<IActionResult> Post([FromForm] int productId, [FromForm] List<IFormFile> files)
         {
-            // Valida o formato do arquivo (PNG, JPG ou JPEG)
+            //Valida o formato do arquivo (PNG, JPG ou JPEG)
             var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
-            if (files != null && files.Any())
+            if (files != null && files.Any())//se tiver algum arquivo de imagem...
             {
-                foreach (IFormFile file in files)
+                foreach (IFormFile file in files)//percorrer sobre eles...
                 {
                     var fileExtension = Path.GetExtension(file.FileName).ToLower();
-                    if (!allowedExtensions.Contains(fileExtension))
+                    if (!allowedExtensions.Contains(fileExtension))//e validar o seu tipo
                     {
                         return BadRequest("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.");
+                        //usar String.Join nessa msg
                     }
                 }
             }
@@ -94,22 +94,19 @@ namespace Minishop.Controllers
             if (ModelState.IsValid)
             {
                 List<ProductImageResponse> imagemResponses = new List<ProductImageResponse>();
-                if (files != null && files.Any())
+                if (files != null && files.Any())//se tiver algum arquivo de imagem...
                 {
-
-                    foreach (IFormFile file in files)
+                    foreach (IFormFile file in files)//percorrer sobre eles...
                     {
                         var retornoImagem = await _service.CadastrarImagem(file, productId);
                         if (!retornoImagem.Sucesso)
                         {
                             return BadRequest(retornoImagem);
                         }
-
-
-                        imagemResponses.Add(retornoImagem.Conteudo);
+                        imagemResponses.Add(retornoImagem.Conteudo);//e cadastrar cada um deles
                     }
                 }
-                return Ok(imagemResponses);
+                return Ok(imagemResponses);//response com as imagens cadastradas
             }
             else
             {
@@ -121,7 +118,6 @@ namespace Minishop.Controllers
         //[Authorize(Roles = "1, 3")]
         public async Task<IActionResult> Put(int productId, [FromBody] ProductUpdateRequest model)
         {
-            // Validate the model and other necessary checks
             if (ModelState.IsValid)
             {
                 var updatedProduct = await _service.Editar(productId, model);
@@ -137,8 +133,7 @@ namespace Minishop.Controllers
             }
         }
 
-        //testar
-        [HttpPut("Imagem do Produto/{productId}")]
+        [HttpPut("ImagemdoProduto/{productId}")]
         //[Authorize(Roles = "1, 3")]
         public async Task<IActionResult> Put(int productId, [FromForm] ProductImageUpdateRequest model)
         {
@@ -158,7 +153,7 @@ namespace Minishop.Controllers
             }
         }
 
-        [HttpPut("Imagem do Produto/{productId}/AlterarOrdem")]
+        [HttpPut("ImagemdoProduto/{productId}/AlterarOrdem")]
         //[Authorize(Roles = "1, 3")]
         public async Task<IActionResult> Put(int productId, [FromBody] ProductImageOrderUpdateRequest model)
         {
@@ -176,6 +171,5 @@ namespace Minishop.Controllers
                 return BadRequest(ModelState);
             }
         }
-
     }
 }
