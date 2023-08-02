@@ -12,12 +12,12 @@ namespace Minishop.Services
     public class UsersService : IUsersService
     {
         private readonly IUsersRepository _usersRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        //private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UsersService(IUsersRepository usersRepository, IHttpContextAccessor httpContextAccessor)
+        public UsersService(IUsersRepository usersRepository)//, IHttpContextAccessor httpContextAccessor)
         {
             _usersRepository = usersRepository;
-            _httpContextAccessor = httpContextAccessor;
+            //_httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ServiceResponse<UserResponse>> Logar(UserLoginRequest model)
@@ -149,7 +149,7 @@ namespace Minishop.Services
             return new ServiceResponse<UserResponse>(response);
         }
 
-        public async Task<ServiceResponse<UserResponse>> Editar(int id, UserUpdateRequest model)
+        public async Task<ServiceResponse<UserResponse>> Editar(int id, UserUpdateRequest model, string user)
         {
 
             // Verificar se o user com o ID fornecido existe no banco de dados
@@ -159,8 +159,7 @@ namespace Minishop.Services
                 return new ServiceResponse<UserResponse>("User não encontrado.");
             }
 
-            var user = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault()!.Value;
-            //string user = User?.Identity?.Name!;
+            //var user = _httpcontextaccessor.httpcontext.user.claims.firstordefault()!.value;
 
             // Verificar se o usuário logado está tentando editar o seu próprio perfil
             if (user == existingUser.UserName)
