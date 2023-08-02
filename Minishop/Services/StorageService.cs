@@ -48,6 +48,24 @@ namespace Minishop.Services
             return key;
 
         }
+
+        public async Task<bool> RemoveImageFromBucket(string key)
+        {
+            var awsAccessKeyId = "AKIAIOSFODNN7EXAMPLE";
+            var awsSecretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+            var awsCredentials = new BasicAWSCredentials(awsAccessKeyId, awsSecretAccessKey);
+            var s3Config = new AmazonS3Config { ServiceURL = "http://localhost:4566", ForcePathStyle = true };
+            var s3Client = new AmazonS3Client(awsCredentials, s3Config);
+
+            var request = new DeleteObjectRequest
+            {
+                BucketName = bucketName,
+                Key = key
+            };
+
+            var response = await s3Client.DeleteObjectAsync(request);
+            return response.HttpStatusCode == System.Net.HttpStatusCode.NoContent;
+        }
     }
 }
 

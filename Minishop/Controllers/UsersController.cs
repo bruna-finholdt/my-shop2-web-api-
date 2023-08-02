@@ -109,9 +109,11 @@ namespace Minishop.Controllers
         [Authorize(Roles = "1")]
         public async Task<IActionResult> Put(int id, [FromBody] UserUpdateRequest updateModel)
         {
+            string user = User?.Identity?.Name!;
+
             if (ModelState.IsValid)
             {
-                var retorno = await _service.Editar(id, updateModel);
+                var retorno = await _service.Editar(id, updateModel, user);
                 if (!retorno.Sucesso)
                 {
                     return BadRequest(retorno.Mensagem);

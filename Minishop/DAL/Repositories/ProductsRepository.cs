@@ -2,13 +2,16 @@
 using Microsoft.EntityFrameworkCore;
 using Minishop.DAL.Base;
 using Minishop.Domain.Entity;
+using Minishop.Services;
 
 namespace Minishop.DAL.Repositories
 {
     public class ProductsRepository : BaseRepository<Product>, IProductsRepository
     {
-        public ProductsRepository(Minishop2023Context minishop2023Context) : base(minishop2023Context)
+        private readonly IStorageService _storageService;
+        public ProductsRepository(Minishop2023Context minishop2023Context, IStorageService storageService) : base(minishop2023Context)
         {
+            _storageService = storageService;
         }
 
         public async Task<int> ContagemProdutosAtivos()
@@ -61,6 +64,11 @@ namespace Minishop.DAL.Repositories
             {
                 return false;//Imagem não encontrada
             }
+
+            // Remove a imagem do bucket
+            var imageUrlParts = productImage.Url.Split('/');
+            var key = imageUrlParts.Last();
+            await _storageService.RemoveImageFromBucket(key);
 
             _minishop2023Context.ProductImages.Remove(productImage);
             await _minishop2023Context.SaveChangesAsync();
