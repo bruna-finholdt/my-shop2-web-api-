@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
+using Microsoft.AspNetCore.Http;
 
 namespace Minishop.Tests.Services
 {
@@ -269,6 +270,237 @@ namespace Minishop.Tests.Services
             Assert.Equal("Produto não encontrado.", response.Mensagem);
         }
 
+        [Fact]
+        public async Task CadastrarImagem_DeveSalvarImagemQuandoProdutoExistente()
+        {
+            //Arrange
+            var productId = 1;
+            var fileMock = new Mock<IFormFile>();
 
+            _mockRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync(new Product { Id = productId });
+
+            _mockRepository.Setup(repo => repo.GetHighestSequence(productId)).ReturnsAsync(2);
+
+            var imageUrl = "https://example.com/image.jpg";
+            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId)).ReturnsAsync(imageUrl);
+
+            ProductImage savedProductImage = null;
+            _mockRepository.Setup(repo => repo.CadastrarImagem(It.IsAny<ProductImage>()))
+                .Callback<ProductImage>(image => savedProductImage = image)
+                .ReturnsAsync((ProductImage image) => image);
+
+            //Act
+            var response = await _productsService.CadastrarImagem(fileMock.Object, productId);
+
+            //Assert
+            Assert.True(response.Sucesso);
+            Assert.NotNull(response.Conteudo);
+            Assert.Equal(imageUrl, response.Conteudo.Url);
+            Assert.Equal(productId, savedProductImage.ProductId);
+            Assert.Equal(imageUrl, savedProductImage.Url);
+            Assert.Equal(3, savedProductImage.Sequencia);//Expected: A próxima sequencia após o 2
+        }
+
+        [Fact]
+        public async Task CadastrarImagem_DeveRetornarErroQuandoProdutoNaoExiste()
+        {
+            //Arrange
+            var productId = 1;
+            var fileMock = new Mock<IFormFile>();
+
+            //Simula o repository para retornar null, indicando que o produto não existe
+            _mockRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync((Product)null);
+
+            //Act
+            var response = await _productsService.CadastrarImagem(fileMock.Object, productId);
+
+            //Assert
+            Assert.False(response.Sucesso);//Retorna false indicando erro
+            Assert.Null(response.Conteudo);//Conteúdo null devido ao erro
+            Assert.Equal("Produto não encontrado.", response.Mensagem);//Verifica a mensagem de erro
+        }
+
+
+        [Fact]
+        public async Task EditarImagem_DeveEditarImagensComSucesso()
+        {
+            //Arrange
+            var productId = 1;
+
+            //Mock imagens já existentes do produto com id 1
+            var existingImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 2, Url = "url2", Sequencia = 2, ProductId = productId }
+            };
+
+            //Lista de IFormFile com imagens simuladas para serem adicionadas na edição do prod de id 1
+            var mockImages = new List<IFormFile>
+            {
+                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("Imagem1")), 0, 0, "imagem1.jpg", "imagem1.jpg"),
+                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("Imagem2")), 0, 0, "imagem2.jpg", "imagem2.jpg")
+            };
+
+            //Mock do ProductUpdateRequest
+            var model = new ProductImageUpdateRequest
+            {
+                NewImages = mockImages,//add 2 imagens
+                ImageIdsToRemove = new List<int> { 1, 2 }//remove as imagens existentes de id 1 e 2
+            };
+
+            //Lista com as novas imagens que foram adicionadas na edição do prod de id 1
+            var updatedImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 3, Url = "url3", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 4, Url = "url4", Sequencia = 2, ProductId = productId }
+            };
+
+            //Simula o serviço de armazenamento
+            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
+                .ReturnsAsync("url3");
+            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
+                .ReturnsAsync("url4");
+
+            //Simula o repository
+            _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
+
+            _mockRepository.Setup(repo => repo.RemoverImagem(It.IsAny<int>())).ReturnsAsync(true);
+
+            //GetImagesByProductId (antes de add as novas imagens/remover as imagens existentes)
+            _mockRepository.Setup(repo => repo.GetImagesByProductId(productId))
+                .ReturnsAsync(existingImages);// returna a lista de imagens original
+
+            List<ProductImage> addedImages = new List<ProductImage>();
+
+            _mockRepository.Setup(repo => repo.CadastrarImagem(It.IsAny<ProductImage>()))
+                .ReturnsAsync((ProductImage image) =>
+                {
+                    addedImages.Add(image);
+                    return image;
+                });
+
+            _mockRepository.Setup(repo => repo.ReorganizarSequenciaDeImagens(productId)).ReturnsAsync(true);
+
+            //GetImagesByProductId (dps de add as novas imagens/remover as imagens existentes)
+            _mockRepository.Setup(repo => repo.GetImagesByProductId(productId))
+                .ReturnsAsync(updatedImages);//retorna a nova lista de imagens (atualizada)
+
+            // Act
+            var response = await _productsService.EditarImagem(productId, model);
+
+            // Assert
+            Assert.True(response.Sucesso);
+            Assert.NotNull(response.Conteudo);
+            Assert.Equal(2, response.Conteudo.Count);
+            Assert.Equal("url3", response.Conteudo[0].Url);
+            Assert.Equal("url4", response.Conteudo[1].Url);
+            Assert.Equal(1, updatedImages[0].Sequencia);
+            Assert.Equal(2, updatedImages[1].Sequencia);
+        }
+
+        [Fact]
+        public async Task EditarImagem_DeveRetornarErroQuandoTiposDeArquivoInadequados()
+        {
+            //Arrange
+            var productId = 1;
+
+            //Mock imagens existentes
+            var existingImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 2, Url = "url2", Sequencia = 2, ProductId = productId }
+            };
+
+            //Cria uma lista de IFormFile com tipos de arquivo inválidos
+            var invalidImages = new List<IFormFile>
+            {
+                new FormFile(new MemoryStream(Encoding.UTF8.GetBytes("Arquivo de texto")), 0, 0, "arquivo.txt", "arquivo.txt"),
+
+            };
+
+            var model = new ProductImageUpdateRequest
+            {
+                NewImages = invalidImages,
+                ImageIdsToRemove = new List<int> { 1, 2 }
+            };
+
+            //Simula o repository para retornar um produto existente
+            _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
+
+            //Simula o repository para retornar imagens existentes
+            _mockRepository.Setup(repo => repo.GetImagesByProductId(productId)).ReturnsAsync(existingImages);
+
+            //Simula o serviço de armazenamento para retornar um erro quando tipos de arquivo inválidos são enviados
+            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
+                .ThrowsAsync(new ArgumentException("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos."));
+
+            //Act
+            var response = await _productsService.EditarImagem(productId, model);
+
+            //Assert
+            Assert.False(response.Sucesso); // Deve retornar false indicando erro
+            Assert.Null(response.Conteudo); // Conteúdo deve ser null em caso de erro
+            Assert.Equal("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.", response.Mensagem); // Verifica a mensagem de erro
+        }
+
+        [Fact]
+        public async Task AlterarOrdemImagens_DeveAtualizarSequenciaDeImagensComSucesso()
+        {
+            //Arrange
+            var productId = 1;
+            var model = new ProductImageOrderUpdateRequest
+            {
+                ImageIds = new List<int> { 2, 1 } //A ordem das imagens será invertida
+            };
+            var images = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 2, Url = "url2", Sequencia = 2, ProductId = productId }
+            };
+
+            _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
+            _mockRepository.Setup(repo => repo.GetImagesByProductId(productId)).ReturnsAsync(images);
+
+            //Atualização da sequência das imagens 
+            _mockRepository.Setup(repo => repo.ReorganizarSequenciaDeImagens(productId)).ReturnsAsync(true);
+
+            //Act
+            var response = await _productsService.AlterarOrdemImagens(productId, model);
+
+            //Assert
+            Assert.True(response.Sucesso);
+            Assert.NotNull(response.Conteudo);
+            Assert.Equal(2, response.Conteudo.Count);
+            Assert.Equal(2, response.Conteudo[0].Sequencia);
+            Assert.Equal(1, response.Conteudo[1].Sequencia);
+        }
+
+        [Fact]
+        public async Task AlterarOrdemImagens_DeveRetornarErroQuandoListaDeIdsContemIdsInvalidos()
+        {
+            //Arrange
+            var productId = 1;
+            var model = new ProductImageOrderUpdateRequest
+            {
+                ImageIds = new List<int> { 1, 2 }
+            };
+            var images = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 3, Url = "url3", Sequencia = 2, ProductId = productId }
+                // Aqui temos as imagens com IDs 1 e 3, mas estamos fornecendo IDs 1 e 2
+            };
+
+            _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
+            _mockRepository.Setup(repo => repo.GetImagesByProductId(productId)).ReturnsAsync(images);
+
+            //Act
+            var response = await _productsService.AlterarOrdemImagens(productId, model);
+
+            //Assert
+            Assert.False(response.Sucesso);
+            Assert.Null(response.Conteudo);
+            Assert.Equal("A lista de IDs de imagens contém IDs inválidos ou não pertencentes ao produto.", response.Mensagem);
+        }
     }
 }

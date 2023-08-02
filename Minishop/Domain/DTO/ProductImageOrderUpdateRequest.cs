@@ -2,6 +2,6 @@
 {
     public class ProductImageOrderUpdateRequest
     {
-        public List<int> ImageIds { get; set; } // Lista de IDs das imagens na nova ordem desejada
+        public List<int> ImageIds { get; set; } //Lista de IDs das imagens na nova ordem desejada
     }
 }

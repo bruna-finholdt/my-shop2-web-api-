@@ -77,27 +77,24 @@ namespace Minishop.DAL.Repositories
         //testar
         public async Task<bool> ReorganizarSequenciaDeImagens(int productId)
         {
-            // Get all images associated with the product and order them by sequence
+            //Obtém todas as imagens associadas aquele produto e as ordena pelo seu valor de sequencia
             var images = await _minishop2023Context.ProductImages
                 .Where(image => image.ProductId == productId)
                 .OrderBy(image => image.Sequencia)
                 .ToListAsync();
 
-            // Update the sequence for each image based on its index in the list
+            //Atualiza a sequencia para cada imagem de acordo com o seu indice
             for (int i = 0; i < images.Count; i++)
             {
                 images[i].Sequencia = i + 1;
             }
-
             try
             {
                 await _minishop2023Context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                // Handle any exception that might occur during the save operation
-                // Log the exception if necessary
                 return false;
             }
         }
@@ -105,33 +102,10 @@ namespace Minishop.DAL.Repositories
         //testar
         public async Task<List<ProductImage>> GetImagesByProductId(int productId)
         {
-            //Recupera todas as imagens associadas aquele productId do banco de dados
+            //Recupera todas as imagens associadas aquele produto no db
             return await _minishop2023Context.ProductImages
                 .Where(img => img.ProductId == productId)
                 .ToListAsync();
-        }
-
-        //testar
-        public async Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images)
-        {
-            if (images == null || images.Count == 0)
-            {
-                return false;
-            }
-
-            try
-            {
-                foreach (var image in images)
-                {
-                    _minishop2023Context.Entry(image).State = EntityState.Modified;
-                }
-                await _minishop2023Context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
         }
 
         //testar
@@ -145,14 +119,36 @@ namespace Minishop.DAL.Repositories
         public async Task<int> GetHighestSequence(int productId)
         {
             var highestSequence = await _minishop2023Context.ProductImages
-        .Where(pi => pi.ProductId == productId)
-        .OrderByDescending(pi => pi.Sequencia)
-        .Select(pi => pi.Sequencia)
-        .FirstOrDefaultAsync();
+           .Where(p => p.ProductId == productId)
+           .OrderByDescending(p => p.Sequencia)
+           .Select(p => p.Sequencia)
+           .FirstOrDefaultAsync();
 
-            // Return 0 if no images are found for the given productId
             return highestSequence;
         }
+
+        ////testar
+        //public async Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images)
+        //{
+        //    if (images == null || images.Count == 0)
+        //    {
+        //        return false;
+        //    }
+
+        //    try
+        //    {
+        //        foreach (var image in images)
+        //        {
+        //            _minishop2023Context.Entry(image).State = EntityState.Modified;
+        //        }
+        //        await _minishop2023Context.SaveChangesAsync();
+        //        return true;
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return false;
+        //    }
+        //}
 
     }
 

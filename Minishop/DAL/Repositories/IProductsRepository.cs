@@ -17,7 +17,7 @@ namespace Minishop.DAL.Repositories
         Task<int> GetImageCount(int productId);
         Task<bool> ReorganizarSequenciaDeImagens(int productId);
         Task<List<ProductImage>> GetImagesByProductId(int productId);
-        Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images);
+        //Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images);
         Task EditarImagem(ProductImage productImage);
         Task<int> GetHighestSequence(int productId);
 

@@ -160,6 +160,7 @@ namespace Minishop.Services
             }
 
             var user = _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault()!.Value;
+            //string user = User?.Identity?.Name!;
 
             // Verificar se o usuário logado está tentando editar o seu próprio perfil
             if (user == existingUser.UserName)
