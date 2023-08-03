@@ -235,7 +235,7 @@ namespace Minishop.Services
             return new ServiceResponse<ProductsCompletoResponse>(productResponse);
         }
 
-        public async Task<ServiceResponse<List<ProductImageResponse>>> EditarImagem(int productId, ProductImageUpdateRequest model)
+        public async Task<ServiceResponse<List<ProductImageResponse>>> RemoverImagem(int productId, ProductImageDeleteRequest model)
         {
 
             var existingProduct = await _productsRepository.PesquisaPorId(productId);
@@ -244,19 +244,19 @@ namespace Minishop.Services
                 return new ServiceResponse<List<ProductImageResponse>>("Produto não encontrado.");
             }
 
-            //Valida o formato de arquivo da(s) nova(s) imagem(ens) (PNG, JPG, or JPEG)
-            var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
-            if (model.NewImages != null && model.NewImages.Any())
-            {
-                foreach (IFormFile file in model.NewImages)
-                {
-                    var fileExtension = Path.GetExtension(file.FileName).ToLower();
-                    if (!allowedExtensions.Contains(fileExtension))
-                    {
-                        return new ServiceResponse<List<ProductImageResponse>>("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.");
-                    }
-                }
-            }
+            ////Valida o formato de arquivo da(s) nova(s) imagem(ens) (PNG, JPG, or JPEG)
+            //var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
+            //if (model.NewImages != null && model.NewImages.Any())
+            //{
+            //    foreach (IFormFile file in model.NewImages)
+            //    {
+            //        var fileExtension = Path.GetExtension(file.FileName).ToLower();
+            //        if (!allowedExtensions.Contains(fileExtension))
+            //        {
+            //            return new ServiceResponse<List<ProductImageResponse>>("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.");
+            //        }
+            //    }
+            //}
 
             //Remove imagem(ens) existente(s)
             if (model.ImageIdsToRemove != null && model.ImageIdsToRemove.Any())
@@ -281,42 +281,42 @@ namespace Minishop.Services
                 return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a remoção.");
             }
 
-            //Obtém as imagens associadas aquele produto
-            var existingImages = await _productsRepository.GetImagesByProductId(productId);
+            ////Obtém as imagens associadas aquele produto
+            //var existingImages = await _productsRepository.GetImagesByProductId(productId);
 
-            //Calcula o valor da próxima sequencia baseada na contagem das imagens existentes
-            int nextSequence = existingImages.Count + 1;
+            ////Calcula o valor da próxima sequencia baseada na contagem das imagens existentes
+            //int nextSequence = existingImages.Count + 1;
 
-            // Cadastra nova(s) imagem(ens)
-            if (model.NewImages != null && model.NewImages.Any())
-            {
-                foreach (IFormFile file in model.NewImages)
-                {
-                    // Cadastra a(s) nova(s) imagem(ens) do produto no bucket e obtém a URL da imagem
-                    string imageUrl = await _storageService.UploadFile(file, productId);
+            //// Cadastra nova(s) imagem(ens)
+            //if (model.NewImages != null && model.NewImages.Any())
+            //{
+            //    foreach (IFormFile file in model.NewImages)
+            //    {
+            //        // Cadastra a(s) nova(s) imagem(ens) do produto no bucket e obtém a URL da imagem
+            //        string imageUrl = await _storageService.UploadFile(file, productId);
 
-                    // Cria uma nova instância de ProductImage para salvar no db
-                    var productImage = new ProductImage
-                    {
-                        Url = imageUrl,
-                        ProductId = productId,
-                        Sequencia = nextSequence
-                    };
+            //        // Cria uma nova instância de ProductImage para salvar no db
+            //        var productImage = new ProductImage
+            //        {
+            //            Url = imageUrl,
+            //            ProductId = productId,
+            //            Sequencia = nextSequence
+            //        };
 
-                    // Chama o método do repository para salvar a imagem do produto no db
-                    await _productsRepository.CadastrarImagem(productImage);
+            //        // Chama o método do repository para salvar a imagem do produto no db
+            //        await _productsRepository.CadastrarImagem(productImage);
 
-                    nextSequence++; // Incrementa o nextSequence 
-                }
-            }
+            //        nextSequence++; // Incrementa o nextSequence 
+            //    }
+            //}
 
-            // Reorganiza a sequência das imagens após cadastrar nova(s) imagem(ens)
-            bool reorganizedAfterAdd = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
+            //// Reorganiza a sequência das imagens após cadastrar nova(s) imagem(ens)
+            //bool reorganizedAfterAdd = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
 
-            if (!reorganizedAfterAdd)
-            {
-                return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a adição.");
-            }
+            //if (!reorganizedAfterAdd)
+            //{
+            //    return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a adição.");
+            //}
 
             //Obtém todas as imagens atualizadas associadas ao produto após as edições
             var updatedImages = await _productsRepository.GetImagesByProductId(productId);
