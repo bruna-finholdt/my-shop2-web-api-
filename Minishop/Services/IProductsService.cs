@@ -12,7 +12,7 @@ namespace Minishop.Services
         Task<ServiceResponse<ProductsCompletoResponse>> PesquisaPorId(int id);
         Task<ServiceResponse<ProductsCompletoResponse>> Cadastrar(ProductCreateRequest novo);
         Task<ServiceResponse<ProductsCompletoResponse>> Editar(int id, ProductUpdateRequest model);
-        Task<ServiceResponse<List<ProductImageResponse>>> EditarImagem(int productId, ProductImageUpdateRequest model);
+        Task<ServiceResponse<List<ProductImageResponse>>> RemoverImagem(int productId, ProductImageDeleteRequest model);
         Task<ServiceResponse<ProductImageResponse>> CadastrarImagem(IFormFile file, int productId);
         Task<ServiceResponse<List<ProductImageResponse>>> AlterarOrdemImagens(int productId, ProductImageOrderUpdateRequest model);
         Task<ServiceResponse<ProductsCompletoResponse>> PesquisaPorIdCompleto(int id);

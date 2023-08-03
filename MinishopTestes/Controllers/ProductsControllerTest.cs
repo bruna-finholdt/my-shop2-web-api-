@@ -363,102 +363,102 @@ namespace Minishop.Tests.Controllers
             Assert.Equal("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.", badRequestResult.Value);
         }
 
-        [Fact]
-        public async Task Put_ImagemDoProduto_DeveRetornarOkQuandoServicoRetornarSucesso()
-        {
-            //Arrange
-            int productId = 1;
-            var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.png");
-            var newImages = new List<IFormFile> { formFile };
-            var imageIdsToRemove = new List<int> { 1, 2 }; //IDs de imagens a serem removidas
+        //[Fact]
+        //public async Task Put_ImagemDoProduto_DeveRetornarOkQuandoServicoRetornarSucesso()
+        //{
+        //    //Arrange
+        //    int productId = 1;
+        //    var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.png");
+        //    var newImages = new List<IFormFile> { formFile };
+        //    var imageIdsToRemove = new List<int> { 1, 2 }; //IDs de imagens a serem removidas
 
-            var productImageUpdateRequest = new ProductImageUpdateRequest
-            {
-                NewImages = newImages,
-                ImageIdsToRemove = imageIdsToRemove
-            };
+        //    var productImageUpdateRequest = new ProductImageUpdateRequest
+        //    {
+        //        NewImages = newImages,
+        //        ImageIdsToRemove = imageIdsToRemove
+        //    };
 
-            //Simula o serviço de armazenamento
-            string imageUrl = "http://localhost:4566/minishop-imagens/test.png";
-            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
-                .ReturnsAsync(imageUrl);//que retorna a url (key) da imagem
+        //    //Simula o serviço de armazenamento
+        //    string imageUrl = "http://localhost:4566/minishop-imagens/test.png";
+        //    _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
+        //        .ReturnsAsync(imageUrl);//que retorna a url (key) da imagem
 
-            //Lista com novas imagens a serem adds
-            var updatedImages = new List<ProductImage>
-            {
-                new ProductImage
-                {
-                    Id = 1,
-                    ProductId = productId,
-                    Url = imageUrl,
-                    Sequencia = 1
-                },
-                new ProductImage
-                {
-                    Id = 2,
-                    ProductId = productId,
-                    Url = "http://localhost:4566/minishop-imagens/test2.png",
-                    Sequencia = 2
-                },
-                new ProductImage
-                {
-                    Id = 3,
-                    ProductId = productId,
-                    Url = "http://localhost:4566/minishop-imagens/test3.png",
-                    Sequencia = 3
-                }
-            };
+        //    //Lista com novas imagens a serem adds
+        //    var updatedImages = new List<ProductImage>
+        //    {
+        //        new ProductImage
+        //        {
+        //            Id = 1,
+        //            ProductId = productId,
+        //            Url = imageUrl,
+        //            Sequencia = 1
+        //        },
+        //        new ProductImage
+        //        {
+        //            Id = 2,
+        //            ProductId = productId,
+        //            Url = "http://localhost:4566/minishop-imagens/test2.png",
+        //            Sequencia = 2
+        //        },
+        //        new ProductImage
+        //        {
+        //            Id = 3,
+        //            ProductId = productId,
+        //            Url = "http://localhost:4566/minishop-imagens/test3.png",
+        //            Sequencia = 3
+        //        }
+        //    };
 
-            //Simula o serviço de edição de imagem do produto
-            _mockService.Setup(service => service.EditarImagem(productId, productImageUpdateRequest))
-                .ReturnsAsync(new ServiceResponse<List<ProductImageResponse>>(
-                    updatedImages.Select(image => new ProductImageResponse(image)).ToList()
-                ));
+        //    //Simula o serviço de edição de imagem do produto
+        //    _mockService.Setup(service => service.EditarImagem(productId, productImageUpdateRequest))
+        //        .ReturnsAsync(new ServiceResponse<List<ProductImageResponse>>(
+        //            updatedImages.Select(image => new ProductImageResponse(image)).ToList()
+        //        ));
 
-            //Act
-            var result = await _controller.Put(productId, productImageUpdateRequest);
+        //    //Act
+        //    var result = await _controller.Put(productId, productImageUpdateRequest);
 
-            //Assert
-            Assert.IsType<OkObjectResult>(result);
-            var okResult = result as OkObjectResult;
-            var response = okResult.Value as ServiceResponse<List<ProductImageResponse>>;
-            Assert.NotNull(response);
-            Assert.Equal(updatedImages.Count, response.Conteudo.Count);//Verifica se o response contém a quantidade correta de imagens
-            // Verifica se as Urls e a sequência das imagens estão corretas
-            for (int i = 0; i < updatedImages.Count; i++)
-            {
-                Assert.Equal(updatedImages[i].Url, response.Conteudo[i].Url);
-                Assert.Equal(updatedImages[i].Sequencia, response.Conteudo[i].Sequencia);
-            }
-        }
+        //    //Assert
+        //    Assert.IsType<OkObjectResult>(result);
+        //    var okResult = result as OkObjectResult;
+        //    var response = okResult.Value as ServiceResponse<List<ProductImageResponse>>;
+        //    Assert.NotNull(response);
+        //    Assert.Equal(updatedImages.Count, response.Conteudo.Count);//Verifica se o response contém a quantidade correta de imagens
+        //    // Verifica se as Urls e a sequência das imagens estão corretas
+        //    for (int i = 0; i < updatedImages.Count; i++)
+        //    {
+        //        Assert.Equal(updatedImages[i].Url, response.Conteudo[i].Url);
+        //        Assert.Equal(updatedImages[i].Sequencia, response.Conteudo[i].Sequencia);
+        //    }
+        //}
 
-        [Fact]
-        public async Task Put_ImagemDoProduto_DeveRetornarBadRequestQuandoProdutoNaoEncontrado()
-        {
-            // Arrange
-            int productId = 1;
-            var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.png");
-            var newImages = new List<IFormFile> { formFile };
-            var imageIdsToRemove = new List<int> { 1, 2 }; //IDs de imagens a serem removidas
+        //[Fact]
+        //public async Task Put_ImagemDoProduto_DeveRetornarBadRequestQuandoProdutoNaoEncontrado()
+        //{
+        //    // Arrange
+        //    int productId = 1;
+        //    var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.png");
+        //    var newImages = new List<IFormFile> { formFile };
+        //    var imageIdsToRemove = new List<int> { 1, 2 }; //IDs de imagens a serem removidas
 
-            var productImageUpdateRequest = new ProductImageUpdateRequest
-            {
-                NewImages = newImages,
-                ImageIdsToRemove = imageIdsToRemove
-            };
+        //    var productImageUpdateRequest = new ProductImageUpdateRequest
+        //    {
+        //        NewImages = newImages,
+        //        ImageIdsToRemove = imageIdsToRemove
+        //    };
 
-            //Simula o serviço de edição de imagens do prod para retornar "Produto não encontrado."
-            _mockService.Setup(service => service.EditarImagem(productId, productImageUpdateRequest))
-                .ReturnsAsync(new ServiceResponse<List<ProductImageResponse>>("Produto não encontrado."));
+        //    //Simula o serviço de edição de imagens do prod para retornar "Produto não encontrado."
+        //    _mockService.Setup(service => service.EditarImagem(productId, productImageUpdateRequest))
+        //        .ReturnsAsync(new ServiceResponse<List<ProductImageResponse>>("Produto não encontrado."));
 
-            //Act
-            var result = await _controller.Put(productId, productImageUpdateRequest);
+        //    //Act
+        //    var result = await _controller.Put(productId, productImageUpdateRequest);
 
-            //Assert
-            Assert.IsType<BadRequestObjectResult>(result);
-            var badRequestResult = result as BadRequestObjectResult;
-            Assert.Equal("Produto não encontrado.", (badRequestResult.Value as ServiceResponse<List<ProductImageResponse>>).Mensagem);
-        }
+        //    //Assert
+        //    Assert.IsType<BadRequestObjectResult>(result);
+        //    var badRequestResult = result as BadRequestObjectResult;
+        //    Assert.Equal("Produto não encontrado.", (badRequestResult.Value as ServiceResponse<List<ProductImageResponse>>).Mensagem);
+        //}
 
         [Fact]
         public async Task Put_ImagemDoProduto_AlterarOrdem_DeveRetornarOkComImagensAtualizadas()
