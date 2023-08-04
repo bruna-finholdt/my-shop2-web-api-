@@ -237,98 +237,57 @@ namespace Minishop.Services
 
         public async Task<ServiceResponse<List<ProductImageResponse>>> RemoverImagem(int productId, ProductImageDeleteRequest model)
         {
-
             var existingProduct = await _productsRepository.PesquisaPorId(productId);
             if (existingProduct == null)
             {
                 return new ServiceResponse<List<ProductImageResponse>>("Produto não encontrado.");
             }
 
-            ////Valida o formato de arquivo da(s) nova(s) imagem(ens) (PNG, JPG, or JPEG)
-            //var allowedExtensions = new[] { ".png", ".jpg", ".jpeg" };
-            //if (model.NewImages != null && model.NewImages.Any())
-            //{
-            //    foreach (IFormFile file in model.NewImages)
-            //    {
-            //        var fileExtension = Path.GetExtension(file.FileName).ToLower();
-            //        if (!allowedExtensions.Contains(fileExtension))
-            //        {
-            //            return new ServiceResponse<List<ProductImageResponse>>("Formato de arquivo não suportado. Apenas arquivos PNG, JPG e JPEG são permitidos.");
-            //        }
-            //    }
-            //}
-
-            //Remove imagem(ens) existente(s)
-            if (model.ImageIdsToRemove != null && model.ImageIdsToRemove.Any())
+            // Remove imagem(ens) existente(s)
+            if (model.ImageIdsToRemove == null || !model.ImageIdsToRemove.Any())
             {
-                foreach (var imageId in model.ImageIdsToRemove)
+                return new ServiceResponse<List<ProductImageResponse>>("Nenhum ID de imagem fornecido para remoção.");
+            }
+
+            foreach (var imageId in model.ImageIdsToRemove)
+            {
+                // Verifica se a imagem existe para algum produto
+                var imageToRemove = await _productsRepository.GetImageById(imageId);
+                if (imageToRemove == null)
                 {
-                    //Remove a imagem do db
-                    bool imageRemoved = await _productsRepository.RemoverImagem(imageId);
-
-                    if (!imageRemoved)
-                    {
-                        return new ServiceResponse<List<ProductImageResponse>>($"Erro ao remover imagem com ID {imageId}.");
-                    }
+                    return new ServiceResponse<List<ProductImageResponse>>($"Imagem com ID {imageId} não existente.");
                 }
+
+                // Verifica se a imagem pertence ao produto
+                if (imageToRemove.ProductId != productId)
+                {
+                    return new ServiceResponse<List<ProductImageResponse>>($"A imagem com ID {imageId} não pertence ao produto com ID {productId}.");
+                }
+
+                // Remove a imagem do db
+                bool imageRemoved = await _productsRepository.RemoverImagem(imageId);
+
+                if (!imageRemoved)
+                {
+                    return new ServiceResponse<List<ProductImageResponse>>($"Erro ao remover imagem com ID {imageId}.");
+                }
+
+                // Reorganiza as sequências das imagens restantes usando o método existente no repository
+                await _productsRepository.ReorganizarSequenciaDeImagens(productId);
             }
 
-            // Reorganiza a sequência das imagens após a remoção
-            bool reorganizedAfterRemove = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
+            var remainingImages = await _productsRepository.GetImagesByProductId(productId);
 
-            if (!reorganizedAfterRemove)
+            // Verifica se existem imagens restantes
+            if (remainingImages == null || !remainingImages.Any())
             {
-                return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a remoção.");
+                // Nenhuma imagem restante, retorna uma lista vazia
+                return new ServiceResponse<List<ProductImageResponse>>(new List<ProductImageResponse>());
             }
 
-            ////Obtém as imagens associadas aquele produto
-            //var existingImages = await _productsRepository.GetImagesByProductId(productId);
-
-            ////Calcula o valor da próxima sequencia baseada na contagem das imagens existentes
-            //int nextSequence = existingImages.Count + 1;
-
-            //// Cadastra nova(s) imagem(ens)
-            //if (model.NewImages != null && model.NewImages.Any())
-            //{
-            //    foreach (IFormFile file in model.NewImages)
-            //    {
-            //        // Cadastra a(s) nova(s) imagem(ens) do produto no bucket e obtém a URL da imagem
-            //        string imageUrl = await _storageService.UploadFile(file, productId);
-
-            //        // Cria uma nova instância de ProductImage para salvar no db
-            //        var productImage = new ProductImage
-            //        {
-            //            Url = imageUrl,
-            //            ProductId = productId,
-            //            Sequencia = nextSequence
-            //        };
-
-            //        // Chama o método do repository para salvar a imagem do produto no db
-            //        await _productsRepository.CadastrarImagem(productImage);
-
-            //        nextSequence++; // Incrementa o nextSequence 
-            //    }
-            //}
-
-            //// Reorganiza a sequência das imagens após cadastrar nova(s) imagem(ens)
-            //bool reorganizedAfterAdd = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
-
-            //if (!reorganizedAfterAdd)
-            //{
-            //    return new ServiceResponse<List<ProductImageResponse>>("Erro ao reorganizar a sequência das imagens após a adição.");
-            //}
-
-            //Obtém todas as imagens atualizadas associadas ao produto após as edições
-            var updatedImages = await _productsRepository.GetImagesByProductId(productId);
-
-            var response = new List<ProductImageResponse>();
-            foreach (var image in updatedImages)
-            {
-                response.Add(new ProductImageResponse(image));
-            }
-
-            return new ServiceResponse<List<ProductImageResponse>>(response);
-
+            // Return success response with the list of remaining images
+            var response = new ServiceResponse<List<ProductImageResponse>>(remainingImages.Select(image => new ProductImageResponse(image)).ToList());
+            return response;
         }
 
         public async Task<ServiceResponse<List<ProductImageResponse>>> AlterarOrdemImagens(int productId, ProductImageOrderUpdateRequest model)
@@ -398,10 +357,6 @@ namespace Minishop.Services
 
             return new ServiceResponse<ProductsCompletoResponse>(product);
         }
-
-
-
-
 
     }
 }
