@@ -20,6 +20,7 @@ namespace Minishop.DAL.Repositories
         //Task<bool> AtualizarSequenciaDeImagens(List<ProductImage> images);
         Task EditarImagem(ProductImage productImage);
         Task<int> GetHighestSequence(int productId);
+        Task<ProductImage> GetImageById(int imageId);
 
 
 

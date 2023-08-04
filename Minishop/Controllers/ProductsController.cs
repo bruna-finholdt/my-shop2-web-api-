@@ -133,29 +133,9 @@ namespace Minishop.Controllers
             }
         }
 
-        //[HttpPut("ImagemdoProduto/{productId}")]
-        ////[Authorize(Roles = "1, 3")]
-        //public async Task<IActionResult> Put(int productId, [FromForm] ProductImageUpdateRequest model)
-        //{
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        var response = await _service.EditarImagem(productId, model);
-
-        //        if (!response.Sucesso)
-        //            return BadRequest(response);
-
-        //        return Ok(response);
-        //    }
-        //    else
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
-        //}
-
         [HttpDelete("ImagemdoProduto/{productId}")]
         //[Authorize(Roles = "1, 3")]
-        public async Task<IActionResult> DeleteImage(int productId, [FromForm] ProductImageDeleteRequest model)
+        public async Task<IActionResult> Delete(int productId, [FromForm] ProductImageDeleteRequest model)
         {
             if (ModelState.IsValid)
             {
