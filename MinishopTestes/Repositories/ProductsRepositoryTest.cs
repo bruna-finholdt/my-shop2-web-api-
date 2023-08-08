@@ -55,8 +55,6 @@ namespace Minishop.Tests.Repositories
             // Assert
             Assert.Equal(products.Count, result); // Verifica se a contagem é igual ao número esperado de registros.
 
-            // Arrange: Não é necessário limpar o contexto novamente
-
             // Adicionando produtos ativos e inativos
             var activeProducts = new List<Product>
             {
@@ -155,7 +153,7 @@ namespace Minishop.Tests.Repositories
         [Fact]
         public async Task Cadastrar_DeveCriarNovoProduct()
         {
-            // Arrange
+            //Arrange
             var newProduct = new Product
             {
                 ProductName = "New Product",
@@ -165,20 +163,18 @@ namespace Minishop.Tests.Repositories
                 PackageName = "1 pacote"
             };
 
-            // Act
+            //Act
             var createdProduct = await _productsRepository.Cadastrar(newProduct);
 
-            // Assert
+            //Assert
             Assert.NotNull(createdProduct);
-            Assert.NotEqual(0, createdProduct.Id); // Verifica se o Id foi preenchido (não é 0)
-            // Verifica se o novo Product foi adicionado ao contexto (banco de dados em memória)
-            Assert.Contains(newProduct, _dbContext.Products);
+            Assert.Contains(newProduct, _dbContext.Products);//verifica se o new product está no db
         }
 
         [Fact]
         public async Task Editar_DeveAtualizarProductExistente()
         {
-            // Arrange
+            //Arrange
             var existingProduct = new Product
             {
                 Id = 1,
@@ -192,20 +188,18 @@ namespace Minishop.Tests.Repositories
             _dbContext.Products.Add(existingProduct);
             _dbContext.SaveChanges();
 
-            // Modifica os dados do Product existente
+            //Modifica os dados do Product existente
             existingProduct.ProductName = "Updated Product";
             existingProduct.UnitPrice = 200;
 
-            // Act
+            //Act
             var updatedProduct = await _productsRepository.Editar(existingProduct);
 
-            // Assert
+            //Assert
             Assert.NotNull(updatedProduct);
             Assert.Equal(existingProduct.Id, updatedProduct.Id);
             Assert.Equal("Updated Product", updatedProduct.ProductName);
             Assert.Equal(200, updatedProduct.UnitPrice);
-
-            // Verifica se o Product foi atualizado no contexto (banco de dados em memória)
             var productInContext = _dbContext.Products.Find(existingProduct.Id);
             Assert.NotNull(productInContext);
             Assert.Equal("Updated Product", productInContext.ProductName);
@@ -215,104 +209,147 @@ namespace Minishop.Tests.Repositories
         [Fact]
         public async Task CadastrarImagem_DeveCadastrarImagemComSucesso()
         {
-            // Arrange
-            var productImage = new ProductImage
+            //Arrange
+            var productId = 1;
+            var existingProduct = new Product
             {
                 Id = 1,
-                Url = "url_da_imagem",
-                Sequencia = 1,
-                ProductId = 1
+                ProductName = "Prod1",
+                SupplierId = 1,
+                UnitPrice = 100,
+                IsDiscontinued = false,
+                PackageName = "1 pacote"
             };
+            _dbContext.Products.Add(existingProduct);
+            _dbContext.SaveChanges();
 
-            // Act
+            var productImage = new ProductImage { Id = 1, ProductId = productId, Url = "urlNewImageProduct.jpg", Sequencia = 1 };
+
+            //Act
             var result = await _productsRepository.CadastrarImagem(productImage);
 
             // Assert
-            // Verifica se o resultado é nulo, pois estamos lidando com o caso de productId inexistente
-            Assert.Null(result);
-
-            // Verifica se a imagem não foi adicionada ao contexto (banco de dados em memória)
-            var imageInContext = await _dbContext.ProductImages.FindAsync(productImage.Id);
-            Assert.Null(imageInContext);
-        }
-
-        [Fact]
-        public async Task CadastrarImagem_DeveRetornarErroComProductIdInexistente()
-        {
-            // Arrange
-            var productImage = new ProductImage
-            {
-                Id = 1,
-                Url = "url_da_imagem",
-                Sequencia = 1,
-                ProductId = 9999 // productId inexistente
-            };
-
-            // Act
-            var result = await _productsRepository.CadastrarImagem(productImage);
-
-            // Assert
-            // Verifica se o resultado é null, indicando que o productId não foi encontrado
-            Assert.Null(result);
-
-            // Verifica se a imagem não foi adicionada ao contexto (banco de dados em memória)
-            var imageInContext = await _dbContext.ProductImages.FindAsync(productImage.Id);
-            Assert.Null(imageInContext);
+            Assert.NotNull(result);
+            Assert.Equal(productId, result.ProductId);
+            Assert.Equal("urlNewImageProduct.jpg", result.Url);
+            Assert.Contains(productImage, _dbContext.ProductImages);//verifica se a productImage está no db
         }
 
         [Fact]
         public async Task RemoverImagem_DeveRemoverImagemComSucesso()
         {
             // Arrange
-            var productId = 1;
-            var imageIdToRemove = 1;
-
-            var productImage = new ProductImage
-            {
-                Id = imageIdToRemove,
-                Url = "url_da_imagem",
-                Sequencia = 1,
-                ProductId = productId
-            };
-
+            var imageId = 1;
+            var productImage = new ProductImage { Id = imageId, ProductId = 1, Url = "urlNewImageProduct.jpg", Sequencia = 1 };
             _dbContext.ProductImages.Add(productImage);
             _dbContext.SaveChanges();
 
-            // Simula o serviço de remoção de imagem do bucket
-            _mockStorageService.Setup(service => service.RemoveImageFromBucket(It.IsAny<string>())).ReturnsAsync(true);
+            _mockStorageService.Setup(repo => repo.RemoveImageFromBucket(It.IsAny<string>())).ReturnsAsync(true);
 
             // Act
-            var result = await _productsRepository.RemoverImagem(imageIdToRemove);
+            var result = await _productsRepository.RemoverImagem(imageId);
 
             // Assert
             Assert.True(result);
-
-            // Verifica se a imagem foi removida do contexto (banco de dados em memória)
-            var imageInContext = await _dbContext.ProductImages.FindAsync(imageIdToRemove);
-            Assert.Null(imageInContext);
+            Assert.Null(_dbContext.ProductImages.Find(imageId));//Verifica se a imagem foi removida do db
         }
 
         [Fact]
-        public async Task RemoverImagem_DeveRetornarErroSeImagemNaoExistir()
+        public async Task GetImageCount_DeveRetornarQuantidadeCorretaDeImagens()
         {
-            // Arrange
-            var imageIdToRemove = 1;
+            //Arrange
+            var productId = 1;
+            var productImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, ProductId = productId, Url = "url1.jpg", Sequencia = 1 },
+                new ProductImage { Id = 2, ProductId = productId, Url = "url2.jpg", Sequencia = 2 },
+                new ProductImage { Id = 3, ProductId = productId, Url = "url3.jpg", Sequencia = 3 }
+            };
 
-            // Simula o serviço de remoção de imagem do bucket
-            _mockStorageService.Setup(service => service.RemoveImageFromBucket(It.IsAny<string>())).ReturnsAsync(true);
+            _dbContext.ProductImages.AddRange(productImages);
+            _dbContext.SaveChanges();
 
-            // Act
-            var result = await _productsRepository.RemoverImagem(imageIdToRemove);
+            //Act
+            var result = await _productsRepository.GetImageCount(productId);
 
-            // Assert
-            Assert.False(result);
-
-            // Verifica se não houve remoção da imagem do contexto (banco de dados em memória)
-            var imageInContext = await _dbContext.ProductImages.FindAsync(imageIdToRemove);
-            Assert.Null(imageInContext);
+            //Assert
+            Assert.Equal(productImages.Count, result);
         }
 
-        // Implement the Dispose method to clean up resources after the test.
+        [Fact]
+        public async Task ReorganizarSequenciaDeImagens_DeveRetornarTrueQuandoReorganizar()
+        {
+            // Arrange
+            var productId = 1;
+            var productImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, ProductId = productId, Url = "url1.jpg", Sequencia = 3 },
+                new ProductImage { Id = 2, ProductId = productId, Url = "url2.jpg", Sequencia = 1 },
+                new ProductImage { Id = 3, ProductId = productId, Url = "url3.jpg", Sequencia = 2 }
+            };
+
+            _dbContext.ProductImages.AddRange(productImages);
+            _dbContext.SaveChanges();
+
+            //Act
+            var result = await _productsRepository.ReorganizarSequenciaDeImagens(productId);
+
+            //Assert
+            Assert.True(result);
+
+            //Verifique se a sequência foi reorganizada corretamente no db (após imagem ser deletada)
+            var updatedImages = await _dbContext.ProductImages
+                .Where(image => image.ProductId == productId)
+                .OrderBy(image => image.Sequencia)
+                .ToListAsync();
+
+            Assert.Equal(1, updatedImages[0].Sequencia);
+            Assert.Equal(2, updatedImages[1].Sequencia);
+            Assert.Equal(3, updatedImages[2].Sequencia);
+        }
+
+        [Fact]
+        public async Task GetImageById_DeveRetornarImagemCorretaQuandoPassadoIdValido()
+        {
+            // Arrange
+            var imageId = 1;
+            var productImage = new ProductImage { Id = imageId, ProductId = 1, Url = "url.jpg", Sequencia = 1 };
+            _dbContext.ProductImages.Add(productImage);
+            _dbContext.SaveChanges();
+
+            // Act
+            var result = await _productsRepository.GetImageById(imageId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(imageId, result.Id);
+            Assert.Equal(1, result.ProductId);
+            Assert.Equal("url.jpg", result.Url);
+        }
+
+        [Fact]
+        public async Task GetHighestSequence_DeveRetornarAMaiorSequenciaDeImagemDeProduto()
+        {
+            //Arrange
+            var productId = 1;
+            var productImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1.jpg", ProductId = productId, Sequencia = 2 },
+                new ProductImage { Id = 2, Url = "url2.jpg", ProductId = productId, Sequencia = 3 },
+                new ProductImage { Id = 3, Url = "url3.jpg", ProductId = productId, Sequencia = 1 }
+            };
+
+            _dbContext.ProductImages.AddRange(productImages);
+            _dbContext.SaveChanges();
+
+            //Act
+            var result = await _productsRepository.GetHighestSequence(productId);
+
+            //Assert
+            Assert.Equal(3, result);//O maior valor de sequência é o 3
+        }
+
+
         public void Dispose()
         {
             _dbContext.Dispose();

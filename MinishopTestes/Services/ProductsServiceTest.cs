@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Minishop.Domain.DTO;
 using Minishop.Domain.Entity;
 using Microsoft.AspNetCore.Http;
+using Minishop.Services.Base;
 
 namespace Minishop.Tests.Services
 {
@@ -139,6 +140,7 @@ namespace Minishop.Tests.Services
             Assert.Equal("Produto não encontrado", result.Mensagem);
         }
 
+        //CADASTRO DE PRODUTO
         [Fact]
         public async Task Cadastrar_DeveSalvarProdutoQuandoRequestValido()
         {
@@ -152,7 +154,6 @@ namespace Minishop.Tests.Services
                 PackageName = "Package 1"
             };
 
-            // Set up the behavior of ISuppliersRepository for the scenario where the supplier exists (returning true)
             _mockSuppliersRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync(new Supplier());
 
 
@@ -199,6 +200,7 @@ namespace Minishop.Tests.Services
             Assert.Equal("Fornecedor não encontrado.", response.Mensagem);
         }
 
+        //EDIÇÃO DE PRODUTO
         [Fact]
         public async Task Editar_DeveSalvarProdutoQuandoRequestValido()
         {
@@ -268,80 +270,83 @@ namespace Minishop.Tests.Services
             Assert.False(response.Sucesso);
             Assert.Null(response.Conteudo);
             Assert.Equal("Produto não encontrado.", response.Mensagem);
+            _mockRepository.Verify(repo => repo.Editar(It.IsAny<Product>()), Times.Never());
         }
 
+        //CADASTRO DE IMAGEM DE PRODUTO
         [Fact]
-        public async Task CadastrarImagem_DeveSalvarImagemQuandoProdutoExistente()
+        public async Task CadastrarImagem_DeveCadastrarImagensComSucesso()
         {
             //Arrange
             var productId = 1;
-            var fileMock = new Mock<IFormFile>();
+            var fileMock1 = new FormFile(Stream.Null, 0, 0, "fileMock1", "fileMock1.jpg");
+            var fileMock2 = new FormFile(Stream.Null, 0, 0, "fileMock2", "fileMock2.jpg");
 
             _mockRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync(new Product { Id = productId });
 
-            _mockRepository.Setup(repo => repo.GetHighestSequence(productId)).ReturnsAsync(2);
+            _mockStorageService.Setup(repo => repo.UploadFile(fileMock1, productId)).ReturnsAsync("urlFileMock1.jpg");
+            _mockStorageService.Setup(repo => repo.UploadFile(fileMock2, productId)).ReturnsAsync("urlFileMock2.jpg");
 
-            var imageUrl = "https://example.com/image.jpg";
-            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId)).ReturnsAsync(imageUrl);
+            //Já existe o produto com uma imagem com valor de sequência 1 no banco. Cadastraremos a de valor 2 e 3 agora.
+            _mockRepository.SetupSequence(repo => repo.GetHighestSequence(productId)).ReturnsAsync(1).ReturnsAsync(2);
 
-            ProductImage savedProductImage = null;
             _mockRepository.Setup(repo => repo.CadastrarImagem(It.IsAny<ProductImage>()))
-                .Callback<ProductImage>(image => savedProductImage = image)
-                .ReturnsAsync((ProductImage image) => image);
+                .ReturnsAsync((ProductImage productImage) => productImage);
 
             //Act
-            var response = await _productsService.CadastrarImagem(fileMock.Object, productId);
+            var response1 = await _productsService.CadastrarImagem(fileMock1, productId);
+            var response2 = await _productsService.CadastrarImagem(fileMock2, productId);
 
             //Assert
-            Assert.True(response.Sucesso);
-            Assert.NotNull(response.Conteudo);
-            Assert.Equal(imageUrl, response.Conteudo.Url);
-            Assert.Equal(productId, savedProductImage.ProductId);
-            Assert.Equal(imageUrl, savedProductImage.Url);
-            Assert.Equal(3, savedProductImage.Sequencia);//Expected: A próxima sequencia após o 2
+            Assert.True(response1.Sucesso);
+            Assert.True(response2.Sucesso);
+            Assert.NotNull(response1.Conteudo);
+            Assert.NotNull(response2.Conteudo);
+            Assert.Equal("urlFileMock1.jpg", response1.Conteudo.Url);
+            Assert.Equal("urlFileMock2.jpg", response2.Conteudo.Url);
+            Assert.Equal(2, response1.Conteudo.Sequencia);//A próxima sequência após o 1 é o 2
+            Assert.Equal(3, response2.Conteudo.Sequencia);//A próxima sequência após o 2 é o 3
         }
 
         [Fact]
-        public async Task CadastrarImagem_DeveRetornarErroQuandoProdutoNaoExiste()
+        public async Task CadastrarImagem_DeveRetornarErroQuandoProductIdNaoExiste()
         {
             //Arrange
-            var productId = 1;
-            var fileMock = new Mock<IFormFile>();
+            var productId = 99;
+            var fileMock = new FormFile(Stream.Null, 0, 0, "fileMock", "fileMock.jpg");
 
-            //Simula o repository para retornar null, indicando que o produto não existe
+            //Simula o repository retornando null, indicando que o produto não existe
             _mockRepository.Setup(repo => repo.PesquisaPorId(It.IsAny<int>())).ReturnsAsync((Product)null);
 
             //Act
-            var response = await _productsService.CadastrarImagem(fileMock.Object, productId);
+            var response = await _productsService.CadastrarImagem(fileMock, productId);
 
             //Assert
             Assert.False(response.Sucesso);//Retorna false indicando erro
             Assert.Null(response.Conteudo);//Conteúdo null devido ao erro
-            Assert.Equal("Produto não encontrado.", response.Mensagem);//Verifica a mensagem de erro
+            Assert.Equal("Produto não encontrado.", response.Mensagem);
         }
 
         [Fact]
-        public async Task RemoverImagem_DeveRemoverImagensQuandoProdutoExistente()
+        public async Task DeletarImagem_DeveRemoverImagensComSucesso()
         {
             // Arrange
             var productId = 1;
-            var imageIdsToRemove = new List<int> { 1, 2, 3 }; //IDs das imagens a serem removidas
+            var imageIdsToRemove = new List<int> { 1, 2, 3 };//IDs das imagens a serem removidas
 
             var productImages = new List<ProductImage>
         {
-            new ProductImage { Id = 1, ProductId = productId, Url = "https://example.com/image1.jpg" },
-            new ProductImage { Id = 2, ProductId = productId, Url = "https://example.com/image2.jpg" },
-            new ProductImage { Id = 3, ProductId = productId, Url = "https://example.com/image3.jpg" }
+            new ProductImage { Id = 1, ProductId = productId, Url = "urlImage1" },
+            new ProductImage { Id = 2, ProductId = productId, Url = "urlImage2" },
+            new ProductImage { Id = 3, ProductId = productId, Url = "urlImage3" }
         };
 
-            // Configuração do mock do IProductsRepository
             _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
             _mockRepository.Setup(repo => repo.GetImageById(It.IsAny<int>()))
                            .ReturnsAsync((int imageId) => productImages.FirstOrDefault(img => img.Id == imageId));
             _mockRepository.Setup(repo => repo.RemoverImagem(It.IsAny<int>()))
-                           .ReturnsAsync((int imageId) => productImages.RemoveAll(img => img.Id == imageId) > 0);
+                           .ReturnsAsync(true);
 
-            // Configuração do mock do IStorageService
             _mockStorageService.Setup(service => service.RemoveImageFromBucket(It.IsAny<string>()))
                                .ReturnsAsync(true);
 
@@ -350,19 +355,18 @@ namespace Minishop.Tests.Services
                 ImageIdsToRemove = imageIdsToRemove
             };
 
-            // Act
+            //Act
             var response = await _productsService.RemoverImagem(productId, request);
 
-            // Assert
+            //Assert
             Assert.True(response.Sucesso);
             Assert.NotNull(response.Conteudo);
-            Assert.Equal(0, response.Conteudo.Count); //Verifica se todas as imagens foram removidas
+            Assert.Equal(0, response.Conteudo.Count);
+            _mockRepository.Verify(repo => repo.RemoverImagem(1));
+            _mockRepository.Verify(repo => repo.RemoverImagem(2));
+            _mockRepository.Verify(repo => repo.RemoverImagem(3));
+            _mockRepository.Verify(repo => repo.RemoverImagem(It.IsAny<int>()), Times.Exactly(3));
         }
-
-
-
-
-
 
         [Fact]
         public async Task DeletarImagem_DeveRetornarErroQuandoIdDeImagemNaoExiste()
@@ -381,26 +385,67 @@ namespace Minishop.Tests.Services
             //Mock do ProductImageDeleteRequest
             var model = new ProductImageDeleteRequest
             {
-                ImageIdsToRemove = new List<int> { 4 } // ID 4 não existe nas imagens existentes
+                ImageIdsToRemove = new List<int> { 4 } //ID 4 não existe nas imagens existentes
             };
 
             //Simula o repository
             _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
 
-            _mockRepository.Setup(repo => repo.RemoverImagem(It.IsAny<int>())).ReturnsAsync(false); // Simula falha ao remover imagem
+            _mockRepository.Setup(repo => repo.RemoverImagem(It.IsAny<int>())).ReturnsAsync(false);//Simula falha ao remover imagem
 
             //GetImagesByProductId (antes de remover imagens)
             _mockRepository.Setup(repo => repo.GetImagesByProductId(productId))
-                .ReturnsAsync(existingImages);// retorna a lista de imagens original
+                .ReturnsAsync(existingImages);//retorna a lista de imagens original
 
             _mockRepository.Setup(repo => repo.ReorganizarSequenciaDeImagens(productId)).ReturnsAsync(true);
 
-            // Act
+            //Act
             var response = await _productsService.RemoverImagem(productId, model);
 
-            // Assert
+            //Assert
             Assert.False(response.Sucesso);
             Assert.Equal("Imagem com ID 4 não existente.", response.Mensagem);
+        }
+
+        [Fact]
+        public async Task DeletarImagem_DeveRetornarErroQuandoIdDeImagemNaoPertenceAoProduto()
+        {
+            //Arrange
+            var productId = 1;
+
+            //Mock imagens já existentes do produto com id 1
+            var existingImages = new List<ProductImage>
+            {
+                new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
+                new ProductImage { Id = 2, Url = "url2", Sequencia = 2, ProductId = productId },
+                new ProductImage { Id = 3, Url = "url3", Sequencia = 3, ProductId = productId },
+                new ProductImage { Id = 4, Url = "url4", Sequencia = 1, ProductId = 2 },
+            };
+
+            //Mock do ProductImageDeleteRequest
+            var model = new ProductImageDeleteRequest
+            {
+                ImageIdsToRemove = new List<int> { 2, 4 } //ID 4 não pertence ao produto de id 1
+            };
+
+            //Simula o repository
+            _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });
+
+            //Simula a busca por imagem existente
+            _mockRepository.Setup(repo => repo.GetImageById(It.IsAny<int>()))
+                           .ReturnsAsync((int imageId) => existingImages.FirstOrDefault(img => img.Id == imageId));
+
+            _mockRepository.Setup(repo => repo.RemoverImagem(It.IsAny<int>())).ReturnsAsync(true);
+
+            //Simula reorganização das sequências
+            _mockRepository.Setup(repo => repo.ReorganizarSequenciaDeImagens(productId)).ReturnsAsync(true);
+
+            //Act
+            var response = await _productsService.RemoverImagem(productId, model);
+
+            //Assert
+            Assert.False(response.Sucesso);
+            Assert.Equal("A imagem com ID 4 não pertence ao produto com ID 1.", response.Mensagem);
         }
 
         [Fact]
@@ -410,7 +455,7 @@ namespace Minishop.Tests.Services
             var productId = 1;
             var model = new ProductImageOrderUpdateRequest
             {
-                ImageIds = new List<int> { 2, 1 } //A ordem das imagens será invertida
+                ImageIds = new List<int> { 2, 1 }//A ordem das imagens será invertida
             };
             var images = new List<ProductImage>
             {
@@ -442,13 +487,12 @@ namespace Minishop.Tests.Services
             var productId = 1;
             var model = new ProductImageOrderUpdateRequest
             {
-                ImageIds = new List<int> { 1, 2 }
+                ImageIds = new List<int> { 2, 1 }
             };
             var images = new List<ProductImage>
             {
                 new ProductImage { Id = 1, Url = "url1", Sequencia = 1, ProductId = productId },
-                new ProductImage { Id = 3, Url = "url3", Sequencia = 2, ProductId = productId }
-                // Aqui temos as imagens com IDs 1 e 3, mas estamos fornecendo IDs 1 e 2
+                new ProductImage { Id = 3, Url = "url3", Sequencia = 2, ProductId = productId }//Id 3 e não 2
             };
 
             _mockRepository.Setup(repo => repo.PesquisaPorId(productId)).ReturnsAsync(new Product { Id = productId });

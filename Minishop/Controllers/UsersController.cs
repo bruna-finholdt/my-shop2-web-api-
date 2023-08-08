@@ -4,6 +4,7 @@ using Minishop.Domain.DTO.Validation;
 using Minishop.Domain.DTO;
 using Minishop.Services;
 using Microsoft.AspNetCore.Authorization;
+using Minishop.Services.Base;
 
 namespace Minishop.Controllers
 {
@@ -58,20 +59,51 @@ namespace Minishop.Controllers
             return Ok(response);
         }
 
+        //[HttpPost]
+        //[Route("Login")]
+        //[AllowAnonymous]
+        //public async Task<ActionResult<dynamic>> AuthenticateAsync([FromBody] UserLoginRequest model)
+        //{
+        //    //Validação modelo de entrada
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+
+        //    }
+        //    var retorno = await _service.Logar(model);
+        //    if (!retorno.Sucesso)
+        //        return BadRequest(retorno);
+
+        //    string token = ""; //oculta a senha
+
+        //    if (retorno.Conteudo != null)
+        //    {
+        //        token = _tokenService.GenerateToken(retorno.Conteudo);
+        //    }
+
+        //    return new //retorna os dados
+        //    {
+        //        user = retorno.Conteudo,
+        //        token = token,
+        //    };
+        //}
+
         [HttpPost]
         [Route("Login")]
         [AllowAnonymous]
-        public async Task<ActionResult<dynamic>> AuthenticateAsync([FromBody] UserLoginRequest model)
+        public async Task<ActionResult<ServiceResponse<UserResponse>>> AuthenticateAsync([FromBody] UserLoginRequest model)
         {
             //Validação modelo de entrada
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
-
             }
+
             var retorno = await _service.Logar(model);
             if (!retorno.Sucesso)
+            {
                 return BadRequest(retorno);
+            }
 
             string token = ""; //oculta a senha
 
@@ -80,11 +112,10 @@ namespace Minishop.Controllers
                 token = _tokenService.GenerateToken(retorno.Conteudo);
             }
 
-            return new //retorna os dados
-            {
-                user = retorno.Conteudo,
-                token = token,
-            };
+            var response = new ServiceResponse<UserResponse>(retorno.Conteudo);
+            response.Token = token;
+
+            return Ok(response);
         }
 
         [HttpPost]

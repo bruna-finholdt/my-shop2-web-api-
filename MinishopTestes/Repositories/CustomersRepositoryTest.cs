@@ -170,7 +170,6 @@ namespace Minishop.Tests.Repositories
             Assert.Contains(newCustomer, _dbContext.Customers);
         }
 
-
         [Fact]
         public async Task Editar_DeveAtualizarCustomerExistente()
         {
@@ -204,8 +203,6 @@ namespace Minishop.Tests.Repositories
             Assert.NotNull(customerInContext);
             Assert.Equal(existingCustomer.Email, customerInContext.Email);
         }
-
-
 
         public void Dispose()
         {
