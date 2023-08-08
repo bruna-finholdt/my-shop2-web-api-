@@ -19,5 +19,6 @@
         public bool Sucesso { get; private set; }
         public string Mensagem { get; private set; }
         public T? Conteudo { get; private set; }
+        public string Token { get; set; }
     }
 }

@@ -68,6 +68,5 @@ namespace Minishop.DAL.Repositories
             await _minishop2023Context.SaveChangesAsync();
             return model;
         }
-
     }
 }

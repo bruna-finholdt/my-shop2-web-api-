@@ -169,6 +169,7 @@ namespace Minishop.Tests.Controllers
             Assert.Equal(mensagem, response.Mensagem);
         }
 
+        //POST DE PRODUTO
         [Fact]
         public async Task Post_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
@@ -235,6 +236,7 @@ namespace Minishop.Tests.Controllers
             Assert.True(error.ContainsKey("ProductName"));
         }
 
+        //PUT DE PRODUTO
         [Fact]
         public async Task Put_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
@@ -275,7 +277,6 @@ namespace Minishop.Tests.Controllers
             Assert.Equal(expectedResponse.Conteudo, response.Conteudo); // Comparar apenas a propriedade Conteudo
         }
 
-
         [Fact]
         public async Task Put_DeveRetornarBadRequestQuandoModelInvalido()
         {
@@ -306,32 +307,52 @@ namespace Minishop.Tests.Controllers
             Assert.True(error.ContainsKey("ProductName"));
         }
 
+        //POST DE IMAGEM DE PRODUTO
         [Fact]
         public async Task Post_ImagemDoProduto_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
             //Arrange
             int productId = 1;
-            var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.png");//fakefile
-            var files = new List<IFormFile> { formFile };
+            var fileMock1 = new FormFile(new MemoryStream(new byte[0]), 0, 0, "fileMock1", "fileMock1.png");
+            var fileMock2 = new FormFile(new MemoryStream(new byte[0]), 0, 0, "fileMock2", "fileMock2.png");
+            var files = new List<IFormFile> { fileMock1, fileMock2 };
 
-            //Simula o serviço de armazenamento
-            string imageUrl = "http://localhost:4566/minishop-imagens/test.png";
-            _mockStorageService.Setup(service => service.UploadFile(It.IsAny<IFormFile>(), productId))
-                .ReturnsAsync(imageUrl);//que retorna a url (key) da imagem
+            _mockStorageService.Setup(service => service.UploadFile(files[0], productId))
+               .ReturnsAsync("urlFileMock1.png");
+            _mockStorageService.Setup(service => service.UploadFile(files[1], productId))
+              .ReturnsAsync("urlFileMock2.png");
 
-            //Crio uma instancia de ProductImageResponse
-            var productImageResponse = new ProductImageResponse
+            var productImageResponse1 = new ProductImageResponse
             {
-                Url = imageUrl,
+                Url = "urlFileMock1.png",
                 ProductId = productId,
-                Id = 123, //ID da imagem
+                Id = 1, //ID da imagem
                 Sequencia = 1 //Sequencia da imagem
             };
+            var productImageResponse2 = new ProductImageResponse
+            {
+                Url = "urlFileMock2.png",
+                ProductId = productId,
+                Id = 2, //ID da imagem
+                Sequencia = 2 //Sequencia da imagem
+            };
 
-            //Simula o serviço de cadastro de imagem do produto
-            var expectedResponse = new ServiceResponse<ProductImageResponse>(productImageResponse);
-            _mockService.Setup(service => service.CadastrarImagem(It.IsAny<IFormFile>(), productId))
-                .ReturnsAsync(expectedResponse);
+            var expectedResponses = new List<ServiceResponse<ProductImageResponse>>();
+
+            foreach (var file in files)
+            {
+                var productImageResponse = new ProductImageResponse
+                {
+                    Url = $"urlFileMock{expectedResponses.Count + 1}.png",
+                    ProductId = productId,
+                    Id = expectedResponses.Count + 1,// ID da imagem
+                    Sequencia = expectedResponses.Count + 1// Sequencia da imagem
+                };
+                var expectedResponse = new ServiceResponse<ProductImageResponse>(productImageResponse);
+                _mockService.Setup(service => service.CadastrarImagem(file, productId))
+                    .ReturnsAsync(expectedResponse);
+                expectedResponses.Add(expectedResponse);
+            }
 
             //Act
             var result = await _controller.Post(productId, files);
@@ -341,11 +362,15 @@ namespace Minishop.Tests.Controllers
             var okResult = result as OkObjectResult;
             var response = okResult.Value as List<ProductImageResponse>;
             Assert.NotNull(response);
-            Assert.Single(response); //Verifica se a resposta contém uma única imagem
-            Assert.Equal(productImageResponse.Url, response[0].Url);
-            Assert.Equal(productImageResponse.ProductId, response[0].ProductId);
-            Assert.Equal(productImageResponse.Id, response[0].Id);
-            Assert.Equal(productImageResponse.Sequencia, response[0].Sequencia);
+            Assert.Equal(expectedResponses.Count, response.Count);
+            Assert.Equal(expectedResponses[0].Conteudo.Url, response[0].Url);
+            Assert.Equal(expectedResponses[0].Conteudo.ProductId, response[0].ProductId);
+            Assert.Equal(expectedResponses[0].Conteudo.Id, response[0].Id);
+            Assert.Equal(expectedResponses[0].Conteudo.Sequencia, response[0].Sequencia);
+            Assert.Equal(expectedResponses[1].Conteudo.Url, response[1].Url);
+            Assert.Equal(expectedResponses[1].Conteudo.ProductId, response[1].ProductId);
+            Assert.Equal(expectedResponses[1].Conteudo.Id, response[1].Id);
+            Assert.Equal(expectedResponses[1].Conteudo.Sequencia, response[1].Sequencia);
         }
 
         [Fact]
@@ -353,8 +378,8 @@ namespace Minishop.Tests.Controllers
         {
             //Arrange
             int productId = 1;
-            var formFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "testFile", "test.pdf");//file inválido (PDF)
-            var files = new List<IFormFile> { formFile };
+            var mockFile = new FormFile(new MemoryStream(new byte[0]), 0, 0, "mockFile", "mockFile.pdf");//tipo de file inválido 
+            var files = new List<IFormFile> { mockFile };
 
             //Act
             var result = await _controller.Post(productId, files);
@@ -368,19 +393,18 @@ namespace Minishop.Tests.Controllers
         [Fact]
         public async Task DeleteImage_ImagemDoProduto_DeveRetornarOkQuandoServicoRetornarSucesso()
         {
-            // Arrange
+            //Arrange
             int productId = 1;
             var model = new ProductImageDeleteRequest
             {
-                ImageIdsToRemove = new List<int> { 123 } //ID da imagem a ser removida
+                ImageIdsToRemove = new List<int> { 5 } //ID da imagem a ser removida
             };
 
-            // Simula o serviço de remoção de imagens
             var expectedResponse = new ServiceResponse<List<ProductImageResponse>>(new List<ProductImageResponse>());
             _mockService.Setup(service => service.RemoverImagem(productId, model))
                 .ReturnsAsync(expectedResponse);
 
-            // Act
+            //Act
             var result = await _controller.Delete(productId, model);
 
             // Assert
@@ -388,11 +412,10 @@ namespace Minishop.Tests.Controllers
             var okResult = result as OkObjectResult;
             Assert.NotNull(okResult.Value);
 
-            // Verifica se o valor retornado é um ServiceResponse<List<ProductImageResponse>> e se a lista de conteúdo está vazia
             Assert.IsType<ServiceResponse<List<ProductImageResponse>>>(okResult.Value);
             var response = okResult.Value as ServiceResponse<List<ProductImageResponse>>;
             Assert.NotNull(response);
-            Assert.Empty(response.Conteudo); // Verifica se a lista de conteúdo está vazia
+            Assert.Empty(response.Conteudo); //Verifica se a lista de conteúdo está vazia
         }
 
         [Fact]
@@ -400,9 +423,12 @@ namespace Minishop.Tests.Controllers
         {
             //Arrange
             int productId = 1;
+            var model = new ProductImageDeleteRequest
+            {
+                ImageIdsToRemove = new List<int> { 5 } //ID da imagem a ser removida
+            };
 
-            // Simula o serviço de remoção de imagem do produto
-            var expectedResponse = new ServiceResponse<List<ProductImageResponse>>("Erro ao remover imagem com ID 123.");
+            var expectedResponse = new ServiceResponse<List<ProductImageResponse>>("Erro ao remover imagem com ID 5.");
             _mockService.Setup(service => service.RemoverImagem(productId, It.IsAny<ProductImageDeleteRequest>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -415,13 +441,13 @@ namespace Minishop.Tests.Controllers
             Assert.IsType<ServiceResponse<List<ProductImageResponse>>>(badRequestResult.Value);
             var response = badRequestResult.Value as ServiceResponse<List<ProductImageResponse>>;
             Assert.False(response.Sucesso);
-            Assert.Equal("Erro ao remover imagem com ID 123.", response.Mensagem);
+            Assert.Equal("Erro ao remover imagem com ID 5.", response.Mensagem);
         }
 
         [Fact]
         public async Task Put_ImagemDoProduto_AlterarOrdem_DeveRetornarOkComImagensAtualizadas()
         {
-            // Arrange
+            //Arrange
             int productId = 1;
             var model = new ProductImageOrderUpdateRequest
             {
@@ -442,7 +468,6 @@ namespace Minishop.Tests.Controllers
                 new ProductImage { Id = 2, ProductId = productId, Sequencia = 3 }
             };
 
-            //Configura o mock do serviço para retornar as imagens atualizadas
             var expectedResponse = new ServiceResponse<List<ProductImageResponse>>(
                 updatedImages.Select(image => new ProductImageResponse(image)).ToList());
             _mockService.Setup(service => service.AlterarOrdemImagens(productId, model))
@@ -457,11 +482,12 @@ namespace Minishop.Tests.Controllers
             var response = okResult.Value as ServiceResponse<List<ProductImageResponse>>;
             Assert.NotNull(response);
             Assert.Equal(updatedImages.Count, response.Conteudo.Count);//Verifica se o response contém a mesma quantidade de imagens
-            for (int i = 0; i < updatedImages.Count; i++)
-            {
-                Assert.Equal(updatedImages[i].Id, response.Conteudo[i].Id);// Verifica se os IDs das imagens estão corretos
-                Assert.Equal(i + 1, response.Conteudo[i].Sequencia);//Verifica se a sequência foi atualizada corretamente
-            }
+            Assert.Equal(updatedImages[0].Id, response.Conteudo[0].Id);//Verifica se os IDs das imagens estão corretos
+            Assert.Equal(1, response.Conteudo[0].Sequencia);//Verifica se a sequência foi atualizada corretamente
+            Assert.Equal(updatedImages[1].Id, response.Conteudo[1].Id);
+            Assert.Equal(2, response.Conteudo[1].Sequencia);
+            Assert.Equal(updatedImages[2].Id, response.Conteudo[2].Id);
+            Assert.Equal(3, response.Conteudo[2].Sequencia);
         }
 
         [Fact]
@@ -474,7 +500,6 @@ namespace Minishop.Tests.Controllers
                 ImageIds = new List<int> { 3, 1, 99 } //IDs de imagens com um ID inválido (99)
             };
 
-            //Simula o serviço de edição de imagens de produtos para retornar um erro com IDs inválidos
             var errorMessage = "A lista de IDs de imagens contém IDs inválidos ou não pertencentes ao produto.";
             var errorResponse = new ServiceResponse<List<ProductImageResponse>>(errorMessage);
             _mockService.Setup(service => service.AlterarOrdemImagens(productId, model))

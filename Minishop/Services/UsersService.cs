@@ -65,6 +65,7 @@ namespace Minishop.Services
                 );
             }
         }
+
         public async Task<ServiceResponse<UserResponse>> PesquisaPorId(int id)
         {
             var user = await _usersRepository.PesquisaPorId(id);
